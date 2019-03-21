@@ -1,0 +1,87 @@
+diff --git a/lib/module.js b/lib/module.js
+index 642e5cb1..9565559b 100644
+--- a/lib/module.js
++++ b/lib/module.js
+@@ -36,6 +36,8 @@ const {
+ } = process.binding('fs');
+ const preserveSymlinks = !!process.binding('config').preserveSymlinks;
+ const experimentalModules = !!process.binding('config').experimentalModules;
++const nbin = require('nbin');
++const os = require('os');
+ 
+ const errors = require('internal/errors');
+ 
+@@ -54,7 +56,8 @@ function stat(filename) {
+ 		const result = cache.get(filename);
+ 		if (result !== undefined) return result;
+ 	}
+-  const result = internalModuleStat(filename);
++	const s = nbin.statSync(filename);
++	const result = s.isDirectory ? 1 : s.isFile ? 0 : internalModuleStat(filename);
+ 	if (cache !== null) cache.set(filename, result);
+ 	return result;
+ }
+@@ -115,8 +118,13 @@ function readPackage(requestPath) {
+ 	if (entry)
+ 		return entry;
+ 
++	let json;
+ 	const jsonPath = path.resolve(requestPath, 'package.json');
+-  const json = internalModuleReadFile(path._makeLong(jsonPath));
++	if (nbin.existsSync(jsonPath)) {
++		json = nbin.readFileSync(jsonPath, 'utf8');
++	} else {
++		json = internalModuleReadFile(path._makeLong(jsonPath));
++	}
+ 
+ 	if (json === undefined) {
+ 		return false;
+@@ -161,6 +169,9 @@ function tryFile(requestPath, isMain) {
+ }
+ 
+ function toRealPath(requestPath) {
++	if (nbin.existsSync(requestPath)) {
++		return requestPath;
++	}
+ 	return fs.realpathSync(requestPath, {
+ 		[internalFS.realpathCacheKey]: realpathCache
+ 	});
+@@ -660,14 +671,24 @@ Module.prototype._compile = function(content, filename) {
+ 
+ // Native extension for .js
+ Module._extensions['.js'] = function(module, filename) {
+-  var content = fs.readFileSync(filename, 'utf8');
++	let content;
++	if (nbin.existsSync(filename)) {
++		content = nbin.readFileSync(filename, 'utf8');
++	} else {
++		content = fs.readFileSync(filename, 'utf8');
++	}
+ 	module._compile(internalModule.stripBOM(content), filename);
+ };
+ 
+ 
+ // Native extension for .json
+ Module._extensions['.json'] = function(module, filename) {
+-  var content = fs.readFileSync(filename, 'utf8');
++	let content;
++	if (nbin.existsSync(filename)) {
++		content = nbin.readFileSync(filename, 'utf8');
++	} else {
++		content = fs.readFileSync(filename, 'utf8');
++	}
+ 	try {
+ 		module.exports = JSON.parse(internalModule.stripBOM(content));
+ 	} catch (err) {
+@@ -679,6 +700,11 @@ Module._extensions['.json'] = function(module, filename) {
+ 
+ //Native extension for .node
+ Module._extensions['.node'] = function(module, filename) {
++	if (nbin.existsSync(filename)) {
++		const tmpFile = path.join(os.tmpdir(), `.nbin-${path.basename(filename)}`);
++		fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
++		filename = tmpFile;
++	}
+ 	return process.dlopen(module, path._makeLong(filename));
+ };
+ 
