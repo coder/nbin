@@ -1,0 +1,11 @@
+lib
+yarn-error.log
+node_modules
+scripts
+src
+.gitignore
+.travis.yml
+node.patch
+tsconfig.json
+webpack.config.js
+yarn.lock

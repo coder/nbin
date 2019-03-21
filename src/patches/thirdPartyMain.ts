@@ -7,6 +7,4 @@
  */
 import * as nbin from "nbin";
 
-if (!process.argv[1]) {
-	process.argv[1] = nbin.mainFile;
-}
+process.argv.splice(1, 0, nbin.mainFile);

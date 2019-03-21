@@ -2,7 +2,7 @@
 	"name": "@coder/nbin",
 	"version": "1.0.0",
 	"description": "Fast and robust single-command node.js binary compiler.",
-	"main": "index.js",
+	"main": "out/api.js",
 	"typings": "typings/nbin.d.ts",
 	"scripts": {
 		"test": "node node_modules/.bin/jest"

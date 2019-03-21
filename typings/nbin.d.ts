@@ -58,10 +58,12 @@ declare module '@coder/nbin' {
 
 		/**
 		 * Writes files from an FS glob.
+		 * Calls back as files are written.
 		 * @example
 		 * writeFiles(path.join(__dirname, "dog/**"));
+		 * @returns number of files written
 		 */
-		public writeFiles(glob: string): number;
+		public writeFiles(glob: string, callback?: (fileWritten: string) => void): number;
 
 		/**
 		 * Resolves a module using `require.resolve`. Bundles

@@ -23,7 +23,7 @@ const baseConfig = {
 			test: /\.node$/,
 		}],
 	},
-	mode: "development",
+	mode: "production",
 	plugins: [
 		new HappyPack({
 			id: "ts",

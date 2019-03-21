@@ -6,5 +6,3 @@ set -e
 ./patch_apply.sh
 ./webpack_build.sh
 ./node_build.sh
-
-npm run test

@@ -26,15 +26,24 @@ export class Binary implements nbin.Binary {
 		}
 	}
 
-	public writeFiles(globName: string): number {
+	public writeFiles(globName: string, callback?: (fileWritten: string) => void): number {
 		const files = glob.sync(globName, {
 			cwd: process.cwd(),
 		});
+		let fileCount: number = 0;
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
+			const stat = fs.statSync(file);
+			if (!stat.isFile()) {
+				continue;
+			}
 			this.writeFile(file, fs.readFileSync(file));
+			if (callback) {
+				callback(file);
+			}
+			fileCount++;
 		}
-		return files.length;
+		return fileCount;
 	}
 
 	public writeModule(moduleName: string): void {
