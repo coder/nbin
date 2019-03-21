@@ -37,10 +37,16 @@ declare module '@coder/nbin' {
 		readonly nodePath?: string;
 
 		/**
+		 * Suppresses log output.
+		 */
+		readonly suppressOutput?: boolean;
+
+		/**
 		 * Main file for your application.
 		 * Will be called as the entrypoint.
 		 */
 		readonly mainFile: string;
+
 	}
 
 	/**
@@ -76,6 +82,6 @@ declare module '@coder/nbin' {
 		 * Bundles the binary.
 		 * @returns the content of the executable file.
 		 */
-		public build(): Buffer;
+		public build(): Promise<Buffer>;
 	}
 }

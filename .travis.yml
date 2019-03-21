@@ -6,7 +6,7 @@ matrix:
   - os: linux
     dist: ubuntu
   - os: osx
-script: scripts/ci.sh && yarn test
+script: scripts/ci.sh && scripts/test.sh
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM

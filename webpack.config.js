@@ -23,7 +23,7 @@ const baseConfig = {
 			test: /\.node$/,
 		}],
 	},
-	mode: "production",
+	mode: "development",
 	plugins: [
 		new HappyPack({
 			id: "ts",
@@ -73,6 +73,9 @@ module.exports = [
 	{
 		...baseConfig,
 		entry: path.join(root, "src", "api", "index.ts"),
+		node: {
+			__dirname: true,
+		},
 		output: {
 			path: path.join(root, "out"),
 			filename: "api.js",
