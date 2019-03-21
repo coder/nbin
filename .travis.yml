@@ -6,12 +6,7 @@ matrix:
   - os: linux
     dist: ubuntu
   - os: osx
-jobs:
-  include:
-  - stage: build
-    script: scripts/ci.sh
-  - stage: test
-    script: yarn test
+script: scripts/ci.sh && yarn test
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM
