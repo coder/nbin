@@ -8,7 +8,18 @@ matrix:
   - os: osx
 jobs:
   include:
-    - stage: build
-      script: scripts/ci.sh
-    - stage: test
-      script: yarn test
+  - stage: build
+    script: scripts/ci.sh
+  - stage: test
+    script: yarn test
+deploy:
+  provider: gcs
+  access_key_id: GOOGZVNTORC5JOVTMMRVCXAM
+  secret_access_key:
+    secure: emlYmPkMTQZykYh1V+mDSoaSyPp5SRWXUxPnJqAvSqM5JZbKLCzjKS6zOpTd6YNZBgklViPud9hMuAkNXH1ApkpcDFqlBG/DzcvgdJO0m+a2n6uUfP9U9O0GBmGc78Fz5kWCip/uckZeA8ZnpU+2He695qIlt2q1ENmKOhIJX7jd6kCxYFfOSadugPkdDMrpmGGEJ4O5KZU1ceAL+bFT0k+nF5Aj578Gih80HzIIlyX/7lIdx4fBV+B3qpNSwgiIZompDeUgFaGyAbbuecSQKmUrG1/4sn9VlJrNR4pFK9ZAldG3K9xR6fshR9cF1GMheX2XbyOk2W/rgn6pVQIV5JLNtwS8trGyGL90wUwSdiSTUd6y/UaOGfudO9QgDo5/nzMf6Ag8AMMr3IIvgbBYR8dUVKFupbhtJOTWdOA0EDlnW800YDGILSGc9a0BjUkuVX3QeGhwAeWYiQ9P5oXA55MaRfADA30dFtVzj9/k/4NQvPME/rvUQxn2jZsalHFPkuaPUVpTfZXyUVwg71cxictRINA7EugfuaqEX/6Imd92NJlrAg1bwr/BQrrbvTnGD6j4YOPT5LlaGcJhmycMC6rxIVD/ss/yGz0X7NS8tv1L16CgjZ/QXoUUpj/jbGerm4LjjPoUOukO0s470NrgBy9ps0a34feWNhU2zitXXvQ=
+  bucket: nbin.cdr.sh
+  skip_cleanup: true
+  local-dir: build
+  on:
+    branch: master
+    repo: codercom/nbin
