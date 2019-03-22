@@ -9,13 +9,13 @@ if (!fs.existsSync(nodePath)) {
 	throw new Error("Node must be built locally to run bundler test");
 }
 const tmpFile = path.join(os.tmpdir(), ".nbin-bundlertest");
-const runBinary = (binary: Binary): cp.SpawnSyncReturns<Buffer> => {
-	fs.writeFileSync(tmpFile, binary.build());
+const runBinary = async (binary: Binary): Promise<cp.SpawnSyncReturns<Buffer>> => {
+	fs.writeFileSync(tmpFile, await binary.build());
 	fs.chmodSync(tmpFile, "755");
 	return cp.spawnSync(tmpFile);
 };
 
-it("should compile binary and execute it", () => {
+it("should compile binary and execute it", async () => {
 	const mainFile = "/example.js";
 	const bin = new Binary({
 		nodePath,
@@ -23,11 +23,11 @@ it("should compile binary and execute it", () => {
 	});
 	const output = "hello!";
 	bin.writeFile(mainFile, Buffer.from(`console.log("${output}");`));
-	const resp = runBinary(bin);
+	const resp = await runBinary(bin);
 	expect(resp.stdout.toString().trim()).toEqual(output);
 });
 
-it("should load native module", () => {
+it("should load native module", async () => {
 	const mainFile = "/example.js";
 	const bin = new Binary({
 		nodePath,
@@ -35,6 +35,6 @@ it("should load native module", () => {
 	});
 	bin.writeModule("node-pty");
 	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
-	const resp = runBinary(bin);
+	const resp = await runBinary(bin);
 	expect(resp.status).toEqual(0);
 });
