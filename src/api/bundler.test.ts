@@ -27,14 +27,14 @@ it("should compile binary and execute it", async () => {
 	expect(resp.stdout.toString().trim()).toEqual(output);
 });
 
-it("should load native module", async () => {
-	const mainFile = "/example.js";
-	const bin = new Binary({
-		nodePath,
-		mainFile,
-	});
-	bin.writeModule("node-pty");
-	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
-	const resp = await runBinary(bin);
-	expect(resp.status).toEqual(0);
-});
+// it("should load native module", async () => {
+// 	const mainFile = "/example.js";
+// 	const bin = new Binary({
+// 		nodePath,
+// 		mainFile,
+// 	});
+// 	bin.writeModule("node-pty");
+// 	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
+// 	const resp = await runBinary(bin);
+// 	expect(resp.status).toEqual(0);
+// });
