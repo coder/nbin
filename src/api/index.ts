@@ -1,3 +1,4 @@
-import { Binary, BinaryOptions } from "./bundler";
+import { Binary } from "./bundler";
 
-export { Binary, BinaryOptions, };
+export { Binary };
+

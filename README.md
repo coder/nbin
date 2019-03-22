@@ -30,6 +30,10 @@ bin.writeFile("out/cli.js", Buffer.from("console.log('hi');"));
 const output = bin.bundle();
 ```
 
+### Forks
+
+`child_process`.`fork` works as expected. `nbin` will treat the compiled binary as the original node binary when the `process.send` function is available.
+
 ### Webpack
 
 If you are using webpack to bundle your `main`, you'll need to externalize modules.
@@ -44,4 +48,12 @@ module.exports = {
 		// Additional modules to exclude
 	},
 };
+```
+
+### Environment
+
+You can pass [`NODE_OPTIONS`](https://nodejs.org/api/cli.html#cli_node_options_options).
+
+```bash
+NODE_OPTIONS="--inspect-brk" ./path/to/bin
 ```

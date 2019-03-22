@@ -7,4 +7,11 @@
  */
 import * as nbin from "nbin";
 
-process.argv.splice(1, 0, nbin.mainFile);
+/**
+ * If bypassing nbin don't touch a thing.
+ */
+if (!process.env.NBIN_BYPASS) {
+	if (!process.send) {
+		process.argv.splice(1, 0, nbin.mainFile);
+	}
+}
