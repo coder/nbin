@@ -24,6 +24,9 @@ const baseConfig = {
 		}],
 	},
 	mode: "production",
+	node: {
+		__dirname: true,
+	},
 	plugins: [
 		new HappyPack({
 			id: "ts",
@@ -69,13 +72,13 @@ module.exports = [
 			filename: "nbin.js",
 			libraryTarget: "commonjs",
 		},
+		externals: {
+			nbin: "commonjs nbin",
+		},
 	},
 	{
 		...baseConfig,
 		entry: path.join(root, "src", "api", "index.ts"),
-		node: {
-			__dirname: true,
-		},
 		output: {
 			path: path.join(root, "out"),
 			filename: "api.js",

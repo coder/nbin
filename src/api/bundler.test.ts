@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { Binary } from "./bundler";
+import * as zlib from "zlib";
 
 const nodePath = path.join(__dirname, "../../lib/node/out/Release/node");
 if (!fs.existsSync(nodePath)) {
@@ -54,4 +55,82 @@ proc.stdout.on("data", (d) => {
 	bin.writeFile("/test.js", Buffer.from("console.log('hi');"));
 	const resp = await runBinary(bin);
 	expect(resp.stdout.toString().trim()).toEqual("hi");
+});
+
+it("should fill fs", async () => {
+	const mainFile = "/example.js";
+	const exampleContent = () => {
+		const assert = require("assert") as typeof import("assert");
+		const fs = require("fs") as typeof import("fs");
+		const nbin = require("nbin") as typeof import("nbin");
+
+		try {
+			fs.readFileSync("/donkey/frog");
+			// Fail if we read successfully
+			process.exit(1);
+		} catch (ex) {
+			nbin.shimNativeFs("/donkey");
+			assert.equal(fs.readFileSync("/donkey/frog").toString(), "example");
+			try {
+				fs.writeFileSync("/donkey/banana", "asdf");
+				process.exit(1);
+			} catch (ex) {
+				// Expected
+			}
+		}
+	};
+	const bin = new Binary({
+		nodePath,
+		mainFile,
+	});
+	bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`));
+	bin.writeFile("/donkey/frog", Buffer.from("example"));
+	const resp = await runBinary(bin);
+	if (resp.stdout.length > 0) {
+		console.log(resp.stdout.toString());
+	}
+	expect(resp.stderr.toString()).toEqual("");
+	expect(resp.status).toEqual(0);
+});
+
+it("should fill fs and propogate errors", async () => {
+	const mainFile = "/example.js";
+	const exampleContent = () => {
+		const fs = require("fs") as typeof import("fs");
+		const nbin = require("nbin") as typeof import("nbin");
+
+		nbin.shimNativeFs("/home/kyle/node/coder/code-server/packages/server");
+		fs.open("/home/kyle/node/coder/code-server/packages/server/build/web/auth/__webpack_hmr", "r", (err) => {
+			if (err) {
+				// Expected
+				process.exit(0);
+			}
+
+			process.exit(1);
+		});
+	};
+	const bin = new Binary({
+		nodePath,
+		mainFile,
+	});
+	bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`));
+	const resp = await runBinary(bin);
+	if (resp.stderr.length > 0) {
+		console.log(resp.stderr.toString());
+	}
+	expect(resp.status).toEqual(0);
+});
+
+it("should load gzip'd javascript", async () => {
+	const mainFile = "/example.js.gz";
+	const bin = new Binary({
+		nodePath,
+		mainFile,
+	});
+	bin.writeFile(mainFile, zlib.gzipSync(Buffer.from("process.exit(0);")));
+	const resp = await runBinary(bin);
+	if (resp.stderr.length > 0) {
+		console.log(resp.stderr.toString());
+	}
+	expect(resp.status).toEqual(0);
 });

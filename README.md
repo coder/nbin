@@ -57,3 +57,5 @@ You can pass [`NODE_OPTIONS`](https://nodejs.org/api/cli.html#cli_node_options_o
 ```bash
 NODE_OPTIONS="--inspect-brk" ./path/to/bin
 ```
+
+Gzip'd JavaScript files are supported to reduce bundle size.

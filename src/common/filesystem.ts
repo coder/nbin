@@ -3,13 +3,14 @@ import { readString, writeString } from "./buffer";
 interface Stat {
 	readonly isFile: boolean;
 	readonly isDirectory: boolean;
+	readonly size: number;
 }
 
 interface File {
 	readonly byteLength: number;
 	readonly byteOffset: number;
 
-	read(): Buffer;
+	read(offset?: number, length?: number): Buffer;
 }
 
 export abstract class Filesystem {
@@ -44,8 +45,8 @@ export class ReadableFilesystem extends Filesystem {
 				byteLength,
 				byteOffset,
 
-				read: (): Buffer => {
-					return buffer.slice(byteOffset, byteOffset + byteLength);
+				read: (offset: number = 0, length: number = byteLength): Buffer => {
+					return buffer.slice(byteOffset + offset, byteOffset + offset + length);
 				},
 			});
 		}
@@ -59,9 +60,11 @@ export class ReadableFilesystem extends Filesystem {
 	}
 
 	public stat(name: string): Stat {
+		const isFile = this.files.has(name);
 		return {
-			isFile: this.files.has(name),
+			isFile: isFile,
 			isDirectory: this.directories.has(name),
+			size: isFile ? this.files.get(name).byteLength : 0,
 		};
 	}
 
@@ -69,12 +72,12 @@ export class ReadableFilesystem extends Filesystem {
 		return this.directories.get(name) as ReadableFilesystem;
 	}
 
-	public read(name: string): Buffer | undefined {
+	public read(name: string, offset?: number, length?: number): Buffer | undefined {
 		const file = this.files.get(name);
 		if (!file) {
 			return undefined;
 		}
-		return file.read();
+		return file.read(offset, length);
 	}
 }
 
@@ -138,7 +141,7 @@ export class WritableFilesystem extends Filesystem {
 			offset = buffer.writeUInt32BE(dir.byteLength, offset);
 			// Up until here is fine
 			// Writing the dirslice
-			buffer.fill(dir, offset);
+			buffer.set(dir, offset);
 			offset += dir.byteLength;
 		}
 		// Storing the amount of files

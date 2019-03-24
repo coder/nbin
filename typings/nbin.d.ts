@@ -5,6 +5,11 @@ declare module 'nbin' {
 	export interface Stat {
 		readonly isDirectory: boolean;
 		readonly isFile: boolean;
+		readonly size: number;
+	}
+
+	export interface Disposable {
+		dispose(): void;
 	}
 
 	/**
@@ -18,14 +23,25 @@ declare module 'nbin' {
 	export const statSync: (path: string) => Stat;
 
 	/**
+	 * Reads a directory within the binary.
+	 */
+	export const readdirSync: (path: string) => ReadonlyArray<string>;
+
+	/**
 	 * Reads a file synchronously from the binary.
 	 */
-	export const readFileSync: ((path: string) => Buffer | undefined) | ((path: string, encoding: "utf8") => string | undefined);
+	function readFileSync(path: string, encoding?: "buffer", offset?: number, length?: number): Buffer;
+	function readFileSync(path: string, encoding?: "utf8", offset?: number, length?: number): Buffer;
 
 	/**
 	 * Returns the entrypoint of the application.
 	 */
 	export const mainFile: string;
+
+	/**
+	 * Shims the native `fs` module for the path
+	 */
+	export const shimNativeFs: (path: string) => void;
 }
 
 declare module '@coder/nbin' {

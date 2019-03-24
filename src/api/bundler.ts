@@ -148,11 +148,8 @@ export class Binary implements nbin.Binary {
 			currentArchitecture = "x86_64";
 		}
 		const nodeVersion = "8.15.0";
-		let dirName = path.join(path.resolve(__dirname), "../");
-		if (!fs.existsSync(path.join(dirName, "package.json"))) {
-			dirName = path.join(path.resolve(__dirname), "../../");
-		}
-		const packageVersion = (typeof __non_webpack_require__ !== "undefined" ? __non_webpack_require__ : require)(path.join(dirName, "package.json")).version;
+		const packageJson = require("../../package.json");
+		const packageVersion = packageJson.version;
 		const binName = `${packageVersion}/node-${nodeVersion}-${currentPlatform}-${currentArchitecture}`;
 
 		return binName;

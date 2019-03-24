@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import { Stat } from "nbin";
 import * as path from "path";
-import * as util from "util";
 import { readString } from "../common/buffer";
 import { ReadableFilesystem } from "../common/filesystem";
 import { readFooter } from "../common/footer";
+import { fillFs } from "./fs";
 
 const execPath = process.execPath;
 const execPathStat = fs.statSync(execPath);
@@ -50,6 +50,12 @@ const parse = (fullPath: string): {
 	}
 };
 
+const createNotFound = (): Error => {
+	const e = new Error("File not found");
+	Object.defineProperty(e, "code", { value: "ENOENT" });
+	return e;
+};
+
 const exported: typeof import("nbin") = {
 	mainFile: mainFile.value,
 
@@ -58,12 +64,23 @@ const exported: typeof import("nbin") = {
 		return stat.isFile || stat.isDirectory;
 	},
 
-	readFileSync: (pathName: string, encoding?: "utf8"): Buffer | string | undefined => {
+	readdirSync: (pathName: string): ReadonlyArray<string> => {
 		const res = parse(pathName);
 		if (!res) {
-			return undefined;
+			throw createNotFound();
 		}
-		const b = res.fs.read(res.name);
+		return res.fs.cd(res.name).ls();
+	},
+
+	readFileSync: (pathName: string, encoding?: "utf8", offset?: number, length?: number): Buffer | string => {
+		const res = parse(pathName);
+		if (!res) {
+			throw createNotFound();
+		}
+		const b = res.fs.read(res.name, offset, length);
+		if (!res) {
+			throw createNotFound();
+		}
 		if (encoding && encoding === "utf8") {
 			return b.toString();
 		}
@@ -76,153 +93,15 @@ const exported: typeof import("nbin") = {
 			return {
 				isDirectory: false,
 				isFile: false,
+				size: 0,
 			};
 		}
 		return res.fs.stat(res.name);
 	},
+
+	shimNativeFs: (pathName: string): void => {
+		fillFs(pathName);
+	},
 } as typeof import("nbin");
 
 export = exported;
-
-const nbinFsFill = {
-	access: (path: string, constant: number, cb: (err?: Error) => void): void => {
-		try {
-			nbinFsFill.accessSync(path, constant);
-			cb();
-		} catch (ex) {
-			cb(ex);
-		}
-	},
-	accessSync: (path: string, constant: number): void => {
-		if (constant === fs.constants.W_OK) {
-			throw new Error("Cannot write to file within binary");
-		}
-	},
-	appendFile: (path: fs.PathLike | number, data: any, options: (() => void) | {}, cb: (ex?: Error) => void) => {
-		if (typeof options === "function") {
-			cb = options as () => void;
-		}
-
-		try {
-			nbinFsFill.appendFileSync(_, data, options);
-		} catch (ex) {
-			cb(ex);
-		}
-	},
-	appendFileSync: (file: fs.PathLike | number, data: any, options: fs.WriteFileOptions = {}): void => {
-		throw new Error("Cannot write to file within binary");
-	},
-	chmod: (() => {
-		try {
-			nbinFsFill.chmodSync(undefined!, undefined!);
-		} catch (ex) {
-			
-		}
-	}) as any,
-	chmodSync: (() => {
-		throw new Error("Cannot chmod to file within binary");
-	}) as any,
-} as typeof import("fs");
-
-/**
- * Invalidated:
- * - appendFileSync
- * - chmodSync
- * - chownSync
- * - createWriteStream
- * - fchmodSync
- * - fchownSync
- * - fdatasyncSync
- * - fsyncSync
- * - ftruncateSync
- * - futimesSync
- * - lchmodSync
- * - lchownSync
- * - linkSync
- * - lstatSync
- * - mkdirSync
- * - readlinkSync
- * - renameSync
- * - rmdirSync
- * - symlinkSync
- * - truncateSync
- * - unlinkSync
- * - utimesSync
- * - writeSync
- * - writeFileSync
- * 
- * Filled:
- * - accessSync
- * - closeSync
- * - copyFileSync?
- * - createReadStream
- * - existsSync
- * - fstatSync
- * - openSync
- * - readSync
- * - readDirSync
- * - readFileSync
- * - realpathSync
- * - statSync
- */
-
-const patchFs = (dirName: string): void => {
-	const replaceNative = <T extends keyof typeof fs>(propertyName: T, func: (callOld: () => void, ...args: any[]) => any, customPromisify?: (...args: any[]) => Promise<any>): void => {
-		const oldFunc = (<any>fs)[propertyName];
-		fs[propertyName] = (...args: any[]): any => {
-			try {
-				return func(() => {
-					return oldFunc(...args);
-				}, ...args);
-			} catch (ex) {
-				return oldFunc(...args);
-			}
-		};
-		if (customPromisify) {
-			(<any>fs[propertyName])[util.promisify.custom] = (...args: any[]): any => {
-				return customPromisify(...args).catch((ex) => {
-					throw ex;
-				});
-			};
-		}
-	};
-
-	const fillNativeFunc = <T extends keyof typeof fs>(propertyName: T): void => {
-		replaceNative(propertyName, (callOld, newPath, ...args) => {
-			if (typeof newPath !== "string") {
-				return callOld();
-			}
-
-			const rel = path.relative(newPath, propertyName!);
-			if (rel.startsWith("..") || !exported.existsSync(newPath)) {
-				return callOld();
-			}
-
-			if (propertyName.endsWith("Sync")) {
-				// 
-			}
-
-			const func = nativeFs[propertyName] as any;
-
-			return func(newPath, ...args);
-		});
-	};
-
-	const properties: Array<keyof typeof fs> = [
-		"chmodSync",
-		"chownSync",
-
-
-		"existsSync",
-		"readFile",
-		"readFileSync",
-		"createReadStream",
-		"readdir",
-		"readdirSync",
-		"statSync",
-		"stat",
-		"realpath",
-		"realpathSync",
-	];
-	properties.forEach((p) => fillNativeFunc(p));
-};
