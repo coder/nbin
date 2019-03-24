@@ -32,9 +32,7 @@ export const fillFs = (pathName: string): void => {
 		(<any>fs[propertyName]).native = nativeFunc;
 		if (customPromisify) {
 			(<any>fs[propertyName])[util.promisify.custom] = (...args: any[]): any => {
-				return customPromisify(...args).catch((ex) => {
-					throw ex;
-				});
+				return customPromisify(...args);
 			};
 		}
 	};
@@ -149,7 +147,38 @@ export const fillFs = (pathName: string): void => {
 		return desc;
 	});
 
-	asyncBypass("read", "readSync", undefined, (bytesRead) => ({ bytesRead }));
+	// @ts-ignore
+	replaceNative("read", (fd: number, buffer: Buffer, offset: number, length: number, position: number,
+		callback: (err: NodeJS.ErrnoException, bytesRead: number, buffer: Buffer) => void) => {
+		const openFile = openFiles.get(fd);
+		if (!openFile) {
+			return callback(new Error(`fd ${fd} not found`), undefined, undefined);
+		}
+		let hadPosition = true;
+		if (typeof position === "undefined" || position === null) {
+			position = openFile.readLocation;
+			hadPosition = false;
+		}
+		const content = nbin.readFileSync(openFile.path, "buffer", position, length);
+		buffer.set(content, offset);
+		if (!hadPosition) {
+			openFile.readLocation += content.byteLength;
+		}
+		callback(undefined!, content.byteLength, content);
+	}, (fd, buffer, offset, length, position) => {
+		return new Promise((resolve, reject) => {
+			fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+				if (err) {
+					return reject(err);
+				}
+
+				resolve({
+					bytesRead,
+					buffer,
+				});
+			});
+		});
+	});
 	replaceNative("readSync", (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
 		const openFile = openFiles.get(fd);
 		if (!openFile) {

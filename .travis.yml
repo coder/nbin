@@ -1,6 +1,10 @@
 language: node_js
 node_js:
 - 8.15.0
+cache: ccache
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+  - export PATH="/usr/local/opt/ccache/libexec:$PATH"
 matrix:
   include:
   - os: linux

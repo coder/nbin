@@ -3,6 +3,9 @@
 cd "$(dirname "$0")"
 source ./vars.sh
 cd ../lib/node
+
+export CC="ccache gcc"
+export CXX='ccache g++'
 ./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js'
 echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
 make -j2
