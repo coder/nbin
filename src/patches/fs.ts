@@ -29,7 +29,9 @@ export const fillFs = (pathName: string): void => {
 				return callNative();
 			}
 		};
-		(<any>fs[propertyName]).native = nativeFunc;
+		if (!customPromisify) {
+			(<any>fs[propertyName]).native = nativeFunc;
+		}
 		if (customPromisify) {
 			(<any>fs[propertyName])[util.promisify.custom] = (...args: any[]): any => {
 				return customPromisify(...args);
@@ -147,39 +149,14 @@ export const fillFs = (pathName: string): void => {
 		return desc;
 	});
 
-	// @ts-ignore
-	replaceNative("read", (fd: number, buffer: Buffer, offset: number, length: number, position: number,
-		callback: (err: NodeJS.ErrnoException, bytesRead: number, buffer: Buffer) => void) => {
-		const openFile = openFiles.get(fd);
-		if (!openFile) {
-			return callback(new Error(`fd ${fd} not found`), undefined, undefined);
-		}
-		let hadPosition = true;
-		if (typeof position === "undefined" || position === null) {
-			position = openFile.readLocation;
-			hadPosition = false;
-		}
-		const content = nbin.readFileSync(openFile.path, "buffer", position, length);
-		buffer.set(content, offset);
-		if (!hadPosition) {
-			openFile.readLocation += content.byteLength;
-		}
-		callback(undefined!, content.byteLength, content);
-	}, (fd, buffer, offset, length, position) => {
-		return new Promise((resolve, reject) => {
-			fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
-				if (err) {
-					return reject(err);
-				}
-
-				resolve({
-					bytesRead,
-					buffer,
-				});
-			});
-		});
-	});
-	replaceNative("readSync", (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
+	/**
+	 * Synchronously performs a read on an fd.
+	 * Split for read and readSync having different signatures
+	 */
+	const doRead = (fd: number, buffer: Buffer, offset: number, length: number, position: number): {
+		readonly buffer: Buffer;
+		readonly bytesRead: number;
+	} => {
 		const openFile = openFiles.get(fd);
 		if (!openFile) {
 			throw new Error(`fd ${fd} not found`);
@@ -194,7 +171,34 @@ export const fillFs = (pathName: string): void => {
 		if (!hadPosition) {
 			openFile.readLocation += content.byteLength;
 		}
-		return content.byteLength;
+		return {
+			bytesRead: content.byteLength,
+			buffer: content,
+		};
+	};
+
+	// @ts-ignore
+	replaceNative("read", (fd: number, buffer: Buffer, offset: number, length: number, position: number,
+		callback: (err: NodeJS.ErrnoException, bytesRead: number, buffer: Buffer) => void) => {
+		const value = doRead(fd, buffer, offset, length, position);
+		callback(null, value.bytesRead, value.buffer);
+	}, (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
+		console.log("CAllLing promisified read");
+		return new Promise((resolve, reject) => {
+			fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+				if (err) {
+					return reject(err);
+				}
+
+				resolve({
+					bytesRead,
+					buffer,
+				});
+			});
+		});
+	});
+	replaceNative("readSync", (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
+		return doRead(fd, buffer, offset, length, position).bytesRead;
 	});
 
 	asyncBypass("readdir", "readdirSync");
