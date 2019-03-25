@@ -46,7 +46,9 @@ export class ReadableFilesystem extends Filesystem {
 				byteOffset,
 
 				read: (offset: number = 0, length: number = byteLength): Buffer => {
-					return buffer.slice(byteOffset + offset, byteOffset + offset + length);
+					const min = Math.min(byteOffset + byteLength, byteOffset + offset);
+					const max = Math.min(byteOffset + byteLength, byteOffset + offset + length);
+					return buffer.slice(min, max);
 				},
 			});
 		}

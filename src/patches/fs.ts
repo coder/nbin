@@ -15,28 +15,19 @@ export const fillFs = (pathName: string): void => {
 	/**
 	 * Replaces a native function with its filled counterpart.
 	 */
-	const replaceNative = <T extends keyof typeof fs>(propertyName: T, func: typeof fs[T], customPromisify?: (...args: any[]) => Promise<any>): void => {
+	const replaceNative = <T extends keyof typeof fs>(propertyName: T, func: typeof fs[T]): void => {
 		filled.push(propertyName);
 		const nativeFunc = (<any>fs)[propertyName];
 		fs[propertyName] = (...args: any[]): any => {
-			const callNative = () => {
-				return nativeFunc(...args);
-			};
 			try {
 				//@ts-ignore
 				return func(...args);
 			} catch (ex) {
-				return callNative();
+				return nativeFunc(...args);
 			}
 		};
-		if (!customPromisify) {
-			(<any>fs[propertyName]).native = nativeFunc;
-		}
-		if (customPromisify) {
-			(<any>fs[propertyName])[util.promisify.custom] = (...args: any[]): any => {
-				return customPromisify(...args);
-			};
-		}
+
+		(<any>fs[propertyName]).native = nativeFunc;
 	};
 
 	//@ts-ignore
@@ -127,7 +118,16 @@ export const fillFs = (pathName: string): void => {
 
 	asyncBypass("fstat", "fstatSync");
 	replaceNative("fstatSync", (fd) => {
-		return undefined!;
+		const of = openFiles.get(fd);
+		if (!of) {
+			throw new Error("file not found");
+		}
+		return fs.statSync(of.path);
+	});
+
+	asyncBypass("lstat", "lstatSync");
+	replaceNative("lstatSync", (pathName) => {
+		return fs.statSync(pathName);
 	});
 
 	let fdId = 0;
@@ -136,7 +136,28 @@ export const fillFs = (pathName: string): void => {
 		readLocation: number;
 	}
 	const openFiles = new Map<number, OpenFile>();
-	asyncBypass("open", "openSync");
+	// asyncBypass("open", "openSync");
+	const oldOpen = fs.open;
+	// @ts-ignore
+	replaceNative("open", (path, flags, mode, cb) => {
+		if (typeof mode === "function") {
+			cb = mode;
+		}
+		if (!nbin.existsSync(path)) {
+			return fs.open(path, flags, mode, cb);
+			// throw new Error("File not found");
+		}
+		const desc = fdId++;
+		openFiles.set(desc, {
+			path,
+			readLocation: 0,
+		});
+
+		process.nextTick(() => {
+			cb(null, desc);
+		});
+		// return desc;
+	});
 	replaceNative("openSync", (path, flags, mode) => {
 		if (!nbin.existsSync(path)) {
 			throw new Error("File not found");
@@ -159,7 +180,7 @@ export const fillFs = (pathName: string): void => {
 	} => {
 		const openFile = openFiles.get(fd);
 		if (!openFile) {
-			throw new Error(`fd ${fd} not found`);
+			throw new Error(`fd ${fd} not found: ` + new Error().stack);
 		}
 		let hadPosition = true;
 		if (typeof position === "undefined" || position === null) {
@@ -177,13 +198,23 @@ export const fillFs = (pathName: string): void => {
 		};
 	};
 
+	const oldRead = fs.read;
 	// @ts-ignore
-	replaceNative("read", (fd: number, buffer: Buffer, offset: number, length: number, position: number,
-		callback: (err: NodeJS.ErrnoException, bytesRead: number, buffer: Buffer) => void) => {
-		const value = doRead(fd, buffer, offset, length, position);
-		callback(null, value.bytesRead, value.buffer);
-	}, (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
-		console.log("CAllLing promisified read");
+	replaceNative("read", (fd: number, buffer: Buffer, offset: number, length: number, position: number, callback: (err: Error, bytesRead: number, buffer: Buffer) => void) => {
+		try {
+			const value = doRead(fd, buffer, offset, length, position);
+			callback(null, value.bytesRead, value.buffer);
+		} catch (ex) {
+			oldRead(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+				if (err) {
+					return callback(err, null, null);
+				}
+
+				callback(null, bytesRead, buffer);
+			});
+		}
+	});
+	(<any>fs.read)[util.promisify.custom] = (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
 		return new Promise((resolve, reject) => {
 			fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
 				if (err) {
@@ -196,7 +227,8 @@ export const fillFs = (pathName: string): void => {
 				});
 			});
 		});
-	});
+	};
+	// asyncBypass("read", "readSync");
 	replaceNative("readSync", (fd: number, buffer: Buffer, offset: number, length: number, position: number) => {
 		return doRead(fd, buffer, offset, length, position).bytesRead;
 	});
@@ -236,32 +268,33 @@ export const fillFs = (pathName: string): void => {
 		const stat = nbin.statSync(path);
 		const date = new Date();
 
-		return {
-			atime: date,
-			atimeMs: date.getTime(),
-			birthtime: date,
-			birthtimeMs: date.getTime(),
-			blksize: null!,
-			blocks: null!,
-			ctime: date,
-			ctimeMs: date.getTime(),
-			dev: null!,
-			gid: 0,
-			ino: 0,
-			isBlockDevice: () => false,
-			isCharacterDevice: () => false,
-			isDirectory: () => stat.isDirectory,
-			isFIFO: () => false,
-			isFile: () => stat.isFile,
-			isSocket: () => false,
-			isSymbolicLink: () => false,
-			mode: null!,
-			mtime: date,
-			mtimeMs: date.getTime(),
-			nlink: null!,
-			rdev: null!,
-			size: stat.size,
-			uid: 0,
+		return new class {
+			isBlockDevice() { return false; }
+			isCharacterDevice() { return false; }
+			isDirectory() { return stat.isDirectory; }
+			isFIFO() { return false; }
+			isFile() { return stat.isFile; }
+			isSocket() { return false; }
+			isSymbolicLink() { return false; }
+
+			public readonly atime = date;
+			public readonly atimeMs = date.getTime();
+			public readonly birthtime = date;
+			public readonly birthtimeMs = date.getTime();
+			public readonly blksize = null!;
+			public readonly blocks = null!;
+			public readonly ctime = date;
+			public readonly ctimeMs = date.getTime();
+			public readonly dev = null!;
+			public readonly gid = 0;
+			public readonly ino = 0;
+			public readonly mode = null!;
+			public readonly mtime = date;
+			public readonly mtimeMs = date.getTime();
+			public readonly nlink = null!;
+			public readonly rdev = null!;
+			public readonly size = stat.size;
+			public readonly uid = 0;
 		};
 	});
 
@@ -269,6 +302,11 @@ export const fillFs = (pathName: string): void => {
 		"ReadStream",
 		"WriteStream",
 		"createReadStream",
+		"createWriteStream",
+		"read",
+		"write",
+		"writeFile",
+		"writeFileSync",
 	];
 	/**
 	 * Attempts to polyfill ALL 

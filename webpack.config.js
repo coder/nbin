@@ -23,7 +23,7 @@ const baseConfig = {
 			test: /\.node$/,
 		}],
 	},
-	mode: "production",
+	mode: "development",
 	node: {
 		__dirname: true,
 	},
