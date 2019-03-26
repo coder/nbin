@@ -77,9 +77,10 @@ export class ReadableFilesystem extends Filesystem {
 
 	public stat(name: string): Stat {
 		const isFile = this.files.has(name);
+		const isDir = this.directories.has(name);
 		return {
 			isFile: isFile,
-			isDirectory: this.directories.has(name),
+			isDirectory: isDir,
 			size: isFile ? this.files.get(name).byteLength : 0,
 		};
 	}
