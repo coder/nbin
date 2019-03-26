@@ -36,9 +36,8 @@ it("should load native module", async () => {
 	});
 	bin.writeModule("node-pty");
 	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
-	console.log("We wrote");
 	const resp = await runBinary(bin);
-	expect(resp.status).toEqual(0);
+	expect(resp.stderr.toString().trim().length).toEqual(0);
 });
 
 it("should fork", async () => {
@@ -55,7 +54,6 @@ proc.stdout.on("data", (d) => {
 	`));
 	bin.writeFile("/test.js", Buffer.from("console.log('hi');"));
 	const resp = await runBinary(bin);
-	console.log(resp.stdout.toString(), resp.stderr.toString());;
 	expect(resp.stdout.toString().trim()).toEqual("hi");
 });
 
@@ -91,8 +89,7 @@ it("should fill fs", async () => {
 	if (resp.stdout.length > 0) {
 		console.log(resp.stdout.toString());
 	}
-	expect(resp.stderr.toString()).toEqual("");
-	expect(resp.status).toEqual(0);
+	expect(resp.stderr.toString().trim()).toEqual("");
 });
 
 it("should fill fs and propogate errors", async () => {
@@ -120,7 +117,7 @@ it("should fill fs and propogate errors", async () => {
 	if (resp.stderr.length > 0) {
 		console.log(resp.stderr.toString());
 	}
-	expect(resp.status).toEqual(0);
+	expect(resp.stderr.toString().trim().length).toEqual(0);
 });
 
 it("should load gzip'd javascript", async () => {
@@ -134,5 +131,5 @@ it("should load gzip'd javascript", async () => {
 	if (resp.stderr.length > 0) {
 		console.log(resp.stderr.toString());
 	}
-	expect(resp.status).toEqual(0);
+	expect(resp.stderr.toString().trim().length).toEqual(0);
 });
