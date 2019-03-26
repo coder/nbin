@@ -6,7 +6,7 @@ cd ../lib/node
 
 export CC="ccache gcc"
 export CXX='ccache g++'
-./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js'
+./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64
 echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
 make -j2
 echo -e "\ntravis_fold:end:$1\r"
