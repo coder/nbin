@@ -28,6 +28,12 @@ declare module 'nbin' {
 	export const readdirSync: (path: string) => ReadonlyArray<string>;
 
 	/**
+	 * Reads a file asynchronously from the binary.
+	 */
+	function readFile(path: string, encoding?: "buffer", offset?: number, length?: number): Promise<Buffer>;
+	function readFile(path: string, encoding?: "utf8", offset?: number, length?: number): Promise<Buffer>;
+
+	/**
 	 * Reads a file synchronously from the binary.
 	 */
 	function readFileSync(path: string, encoding?: "buffer", offset?: number, length?: number): Buffer;

@@ -36,6 +36,7 @@ it("should load native module", async () => {
 	});
 	bin.writeModule("node-pty");
 	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
+	console.log("We wrote");
 	const resp = await runBinary(bin);
 	expect(resp.status).toEqual(0);
 });
@@ -49,11 +50,12 @@ it("should fork", async () => {
 	bin.writeFile(mainFile, Buffer.from(`const proc = require("child_process").fork("/test.js", [], { stdio: [null, null, null, "ipc"] });
 proc.stdout.on("data", (d) => {
 	console.log(d.toString("utf8"));
-	process.exit(0);
+	setTimeout(() => process.exit(0), 10000);
 });
 	`));
 	bin.writeFile("/test.js", Buffer.from("console.log('hi');"));
 	const resp = await runBinary(bin);
+	console.log(resp.stdout.toString(), resp.stderr.toString());;
 	expect(resp.stdout.toString().trim()).toEqual("hi");
 });
 

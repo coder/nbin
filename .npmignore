@@ -11,3 +11,5 @@ tsconfig.json
 webpack.config.js
 yarn.lock
 example
+build
+*.tgz

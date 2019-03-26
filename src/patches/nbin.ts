@@ -14,14 +14,38 @@ const nbinFd = fs.openSync(execPath, "r");
 const footer = readFooter(nbinFd, execPathStat.size);
 
 // Contains the mainFile and the filesystem
-const mainFileFsBuffer = Buffer.allocUnsafe(footer.byteLength);
-fs.readSync(nbinFd, mainFileFsBuffer, 0, footer.byteLength, footer.byteOffset);
+const mainFileFsBuffer = Buffer.allocUnsafe(footer.headerLength);
+fs.readSync(nbinFd, mainFileFsBuffer, 0, footer.headerLength, footer.headerOffset);
 
 // Reading the mainfile
 const mainFile = readString(mainFileFsBuffer, 0);
 
+/**
+ * Maximize read perf by storing before any overrides
+ */
+const originalRead = fs.read;
+const originalReadSync = fs.readSync;
+
 const fsBuffer = mainFileFsBuffer.slice(mainFile.offset);
-const readableFs = ReadableFilesystem.fromBuffer(fsBuffer);
+const readableFs = ReadableFilesystem.fromBuffer(fsBuffer, {
+	readContents: (offset: number, length: number): Promise<Buffer> => {
+		const buffer = Buffer.allocUnsafe(length);
+		return new Promise<Buffer>((resolve, reject) => {
+			originalRead(nbinFd, buffer, 0, length, offset + footer.contentOffset, (err, _, buffer) => {
+				if (err) {
+					return reject(err);
+				}
+
+				resolve(buffer);
+			});
+		});
+	},
+	readContentsSync: (offset: number, length: number): Buffer => {
+		const buffer = Buffer.alloc(length);
+		originalReadSync(nbinFd, buffer, 0, length, offset + footer.contentOffset);
+		return buffer;
+	},
+});
 
 /**
  * Parses an entry from a readable FS.
@@ -72,15 +96,24 @@ const exported: typeof import("nbin") = {
 		return res.fs.cd(res.name).ls();
 	},
 
+	readFile: async (pathName: string, encoding?: "utf8", offset?: number, length?: number): Promise<Buffer> | Promise<string> => {
+		const res = parse(pathName);
+		if (!res) {
+			throw createNotFound();
+		}
+		const b = await res.fs.read(res.name, offset, length);
+		if (encoding && encoding === "utf8") {
+			return b.toString();
+		}
+		return b;
+	},
+
 	readFileSync: (pathName: string, encoding?: "utf8", offset?: number, length?: number): Buffer | string => {
 		const res = parse(pathName);
 		if (!res) {
 			throw createNotFound();
 		}
-		const b = res.fs.read(res.name, offset, length);
-		if (!res) {
-			throw createNotFound();
-		}
+		const b = res.fs.readSync(res.name, offset, length);
 		if (encoding && encoding === "utf8") {
 			return b.toString();
 		}

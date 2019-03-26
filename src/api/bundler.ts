@@ -9,6 +9,7 @@ import * as path from "path";
 import { writeString } from "../common/buffer";
 import { WritableFilesystem } from "../common/filesystem";
 import { createFooter } from "../common/footer";
+import ora, { Ora } from "ora";
 
 declare const __non_webpack_require__: typeof require;
 
@@ -37,6 +38,10 @@ export class Binary implements nbin.Binary {
 			cwd: process.cwd(),
 		});
 		let fileCount: number = 0;
+		let spinner: Ora | undefined;
+		if (this.canLog) {
+			spinner = ora("Writing...");
+		}
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 			const stat = fs.statSync(file);
@@ -44,13 +49,16 @@ export class Binary implements nbin.Binary {
 				continue;
 			}
 			this.writeFile(file, fs.readFileSync(file));
-			if (this.canLog) {
-				logger.info("Wrote file", field("file", file));
+			if (spinner) {
+				spinner.text = `Wrote "${file}"!`;
 			}
 			if (callback) {
 				callback(file);
 			}
 			fileCount++;
+		}
+		if (spinner) {
+			spinner.succeed(`Wrote ${fileCount} ${fileCount === 1 ? "file" : "files"}!`);
 		}
 		return fileCount;
 	}
@@ -87,12 +95,17 @@ export class Binary implements nbin.Binary {
 			logger.info("Building filesystem");
 		}
 		// Filesystem contents
-		const fsBuffer = this.fs.toBuffer();
+		const fsBuffer = this.fs.build();
 
 		// Footer
-		const footerBuffer = createFooter(fsBuffer.byteLength + mainFileBuffer.byteLength, nodeBuffer.byteLength);
+		const footerBuffer = createFooter(
+			fsBuffer.header.byteLength + mainFileBuffer.byteLength, // Header byte length
+			nodeBuffer.byteLength, // Header byte offset
+			fsBuffer.fileContents.byteLength, // File contents length
+			nodeBuffer.byteLength + fsBuffer.header.byteLength + mainFileBuffer.byteLength, // File contents offset
+			);
 
-		return Buffer.concat([nodeBuffer, mainFileBuffer, fsBuffer, footerBuffer]);
+		return Buffer.concat([nodeBuffer, mainFileBuffer, fsBuffer.header, fsBuffer.fileContents, footerBuffer]);
 	}
 
 	private async cacheBinary(): Promise<Buffer> {
