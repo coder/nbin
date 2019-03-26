@@ -5,7 +5,7 @@
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Discord](https://discordapp.com/api/guilds/463752820026376202/widget.png)](https://discord.gg/zxSwN8Z)
 
-Fast and robust single-command node.js binary compiler.
+Fast and robust node.js binary compiler.
 
 **WARNING:** This project was created for [code-server](https://github.com/codercom/code-server) and may provide limited support.
 

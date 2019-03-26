@@ -144,6 +144,9 @@ export class Binary implements nbin.Binary {
 	private async fetchNodeBinary(): Promise<Buffer> {
 		const binName = this.nodeBinaryName;
 		const url = `https://nbin.cdr.sh/${binName}`;
+		if (this.canLog) {
+			logger.info("Fetching", field("url", url));
+		}
 
 		const resp = await fetch(url);
 		if (resp.status !== 200) {
