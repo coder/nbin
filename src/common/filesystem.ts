@@ -91,7 +91,7 @@ export class ReadableFilesystem extends Filesystem {
 	public read(name: string, offset?: number, length?: number): Promise<Buffer> {
 		const file = this.files.get(name);
 		if (!file) {
-			throw new Error("File not found");
+			return Promise.reject("File not found");
 		}
 		return file.read(offset, length);
 	}
