@@ -13,8 +13,15 @@ echo -e "\ntravis_fold:end:$1\r"
 cd ../../
 
 mkdir -p ./build/$PACKAGE_VERSION
-OS=${OSTYPE%-gnu}
-ARCH=$(uname -p)
+
+
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+	OS="linux"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	OS="darwin"
+fi
+
+ARCH=$(uname -m)
 BINARY_NAME="node-${NODE_VERSION}-${OS}-${ARCH}"
 
 cp ./lib/node/out/Release/node ./build/$PACKAGE_VERSION/$BINARY_NAME
