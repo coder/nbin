@@ -21,7 +21,7 @@ index 0e9c36c4fc..66367e51ce 100644
        // one to drop a file lib/_third_party_main.js into the build
        // directory which will be executed instead of Node's normal loading.
 diff --git a/lib/module.js b/lib/module.js
-index 642e5cb1f1..33a04faa3a 100644
+index 642e5cb1f1..3d298fbf01 100644
 --- a/lib/module.js
 +++ b/lib/module.js
 @@ -36,6 +36,9 @@ const {
@@ -85,7 +85,7 @@ index 642e5cb1f1..33a04faa3a 100644
  
 +// Native extension for .gz
 +Module._extensions['.gz'] = function(module, filename) {
-+	const content = zlib.gunzipSync(nbin.readFileSync(filename));
++	const content = zlib.gunzipSync(nbin.readFileSync(filename)).toString("utf8");
 +	module._compile(internalModule.stripBOM(content), filename);
 +};
  
