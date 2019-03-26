@@ -9,8 +9,9 @@ const nodePath = path.join(__dirname, "../../lib/node/out/Release/node");
 if (!fs.existsSync(nodePath)) {
 	throw new Error("Node must be built locally to run bundler test");
 }
-const tmpFile = path.join(os.tmpdir(), ".nbin-bundlertest");
+let binId = 0;
 const runBinary = async (binary: Binary): Promise<cp.SpawnSyncReturns<Buffer>> => {
+	const tmpFile = path.join(os.tmpdir(), ".nbin-bundlertest" + binId++);
 	fs.writeFileSync(tmpFile, await binary.build());
 	fs.chmodSync(tmpFile, "755");
 	return cp.spawnSync(tmpFile);
