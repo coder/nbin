@@ -29,17 +29,22 @@ it("should compile binary and execute it", async () => {
 	expect(resp.stdout.toString().trim()).toEqual(output);
 });
 
-it("should load native module", async () => {
-	const mainFile = "/example.js";
-	const bin = new Binary({
-		nodePath,
-		mainFile,
+/**
+ * TODO: this should work on other platforms
+ */
+if (process.platform === "linux") {
+	it("should load native module", async () => {
+		const mainFile = "/example.js";
+		const bin = new Binary({
+			nodePath,
+			mainFile,
+		});
+		bin.writeModule("node-pty");
+		bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
+		const resp = await runBinary(bin);
+		expect(resp.stderr.toString().trim().length).toEqual(0);
 	});
-	bin.writeModule("node-pty");
-	bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
-	const resp = await runBinary(bin);
-	expect(resp.stderr.toString().trim().length).toEqual(0);
-});
+}
 
 it("should fork", async () => {
 	const mainFile = "/example.js";
@@ -58,40 +63,45 @@ proc.stdout.on("data", (d) => {
 	expect(resp.stdout.toString().trim()).toEqual("hi");
 });
 
-it("should fill fs", async () => {
-	const mainFile = "/example.js";
-	const exampleContent = () => {
-		const assert = require("assert") as typeof import("assert");
-		const fs = require("fs") as typeof import("fs");
-		const nbin = require("nbin") as typeof import("nbin");
+/**
+ * TODO: this should work on other platforms
+ */
+if (process.platform === "linux") {
+	it("should fill fs", async () => {
+		const mainFile = "/example.js";
+		const exampleContent = () => {
+			const assert = require("assert") as typeof import("assert");
+			const fs = require("fs") as typeof import("fs");
+			const nbin = require("nbin") as typeof import("nbin");
 
-		try {
-			fs.readFileSync("/donkey/frog");
-			// Fail if we read successfully
-			process.exit(1);
-		} catch (ex) {
-			nbin.shimNativeFs("/donkey");
-			assert.equal(fs.readFileSync("/donkey/frog").toString(), "example");
 			try {
-				fs.writeFileSync("/donkey/banana", "asdf");
+				fs.readFileSync("/donkey/frog");
+				// Fail if we read successfully
 				process.exit(1);
 			} catch (ex) {
-				// Expected
+				nbin.shimNativeFs("/donkey");
+				assert.equal(fs.readFileSync("/donkey/frog").toString(), "example");
+				try {
+					fs.writeFileSync("/donkey/banana", "asdf");
+					process.exit(1);
+				} catch (ex) {
+					// Expected
+				}
 			}
+		};
+		const bin = new Binary({
+			nodePath,
+			mainFile,
+		});
+		bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`));
+		bin.writeFile("/donkey/frog", Buffer.from("example"));
+		const resp = await runBinary(bin);
+		if (resp.stdout.length > 0) {
+			console.log(resp.stdout.toString());
 		}
-	};
-	const bin = new Binary({
-		nodePath,
-		mainFile,
+		expect(resp.stderr.toString().trim()).toEqual("");
 	});
-	bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`));
-	bin.writeFile("/donkey/frog", Buffer.from("example"));
-	const resp = await runBinary(bin);
-	if (resp.stdout.length > 0) {
-		console.log(resp.stdout.toString());
-	}
-	expect(resp.stderr.toString().trim()).toEqual("");
-});
+}
 
 it("should fill fs and propogate errors", async () => {
 	const mainFile = "/example.js";
