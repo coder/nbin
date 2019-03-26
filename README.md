@@ -7,6 +7,14 @@
 
 Fast and robust single-command node.js binary compiler.
 
+**WARNING:** This project was created for [code-server](https://github.com/codercom/code-server) and may provide limited support.
+
+Why was this made? Why not use `pkg` or `nexe`?
+
+- Support for native node modules.
+- No magic. The user specifies all customization. An example of this is overriding the filesystem.
+- First-class support for multiple platforms.
+
 ## Usage
 
 We *highly* recommend using webpack to bundle your sources. We do not scan source-files for modules to include.
