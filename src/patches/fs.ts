@@ -281,6 +281,20 @@ export const fillFs = (pathName: string): void => {
 		return nbin.readFileSync(pathName, encoding as "buffer");
 	});
 
+	// @ts-ignore
+	override("realpath", (callOld) => (pathName: string, ...args: any[]) => {
+		const cb = findCb(args);
+		if (!cb) {
+			return;
+		}
+		cb(null, pathName);
+	});
+
+	// @ts-ignore
+	override("realpathSync", (callOld) => (pathName: string) => {
+		return pathName;
+	});
+
 	const doStat = (pathName: string): fs.Stats => {
 		const stat = nbin.statSync(pathName);
 		const date = new Date();
