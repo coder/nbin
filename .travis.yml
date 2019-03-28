@@ -10,7 +10,7 @@ before_install:
 matrix:
   include:
   - os: linux
-    dist: trusty
+    dist: xenial
   - os: osx
 script: scripts/ci.sh && scripts/test.sh
 deploy:
