@@ -94,11 +94,13 @@ declare module '@coder/nbin' {
 		public writeFiles(glob: string, callback?: (fileWritten: string) => void): number;
 
 		/**
-		 * Resolves a module using `require.resolve`. Bundles
-		 * it into `/node_modules`. Natively node will fallback
-		 * to that directory.
+		 * Will bundle a module based on path and name.
+		 * Allows you to do `writeModule("/test/bananas/node_modules/frog")` and
+		 * embed the `frog` module within the binary.
+		 * 
+		 * All modules by default will be placed in `/node_modules`
 		 */
-		public writeModule(moduleName: string): void;
+		public writeModule(modulePath: string): void;
 
 		/**
 		 * Bundles the binary.

@@ -63,16 +63,16 @@ export class Binary implements nbin.Binary {
 		return fileCount;
 	}
 
-	public writeModule(moduleName: string): void {
-		if (!moduleName.endsWith("package.json")) {
-			moduleName = path.join(moduleName, "package.json");
+	public writeModule(modulePath: string): void {
+		if (!fs.existsSync(modulePath)) {
+			throw new Error(`"${modulePath}" does not exist`);
 		}
-		const modPath = path.dirname(require.resolve(moduleName));
-		const paths = glob.sync(path.join(modPath, "**"))
+		const paths = glob.sync(path.join(modulePath, "**"))
+		const moduleName = path.basename(modulePath);
 
 		for (let i = 0; i < paths.length; i++) {
 			const p = paths[i];
-			const newPath = path.join("/node_modules", path.dirname(moduleName), path.relative(modPath, p));
+			const newPath = path.join("/node_modules", moduleName, path.relative(modulePath, p));
 			const stat = fs.statSync(p);
 			if (!stat.isFile()) {
 				continue;
