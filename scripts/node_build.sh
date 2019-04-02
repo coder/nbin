@@ -8,7 +8,7 @@ export CC="ccache gcc-7"
 export CXX='ccache g++-7'
 echo "Configuring with --dest-cpu=x64"
 ./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64
-make -j12 &>/dev/null &
+make -j2 &>/dev/null &
 pid=$!
 (
 	while true; do
