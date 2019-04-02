@@ -4,8 +4,8 @@ cd "$(dirname "$0")"
 source ./vars.sh
 cd ../lib/node
 
-export CC="ccache gcc"
-export CXX='ccache g++'
+export CC="ccache gcc-8"
+export CXX='ccache g++-8'
 echo "Configuring with --dest-cpu=x64"
 ./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64
 make -j2
