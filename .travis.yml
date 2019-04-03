@@ -5,19 +5,8 @@ cache:
   directories:
     - /home/travis/.ccache/
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
-  - export PATH="/usr/local/opt/ccache/libexec:$PATH"
-  - eval "$(MATRIX_EVAL)"
-matrix:
-  include:
-  - os: linux
-    dist: xenial
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
-  - os: osx
+  - sudo apt-get -qq update
+  - sudo apt-get install -y g++-multilib
 script: scripts/ci.sh && scripts/test.sh
 deploy:
   provider: gcs
