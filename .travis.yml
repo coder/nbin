@@ -14,8 +14,10 @@ matrix:
     addons:
       apt:
         packages:
-          - gcc-multilib
-          - g++-multilib
+          - gcc-7
+          - g++-7
+          - gcc-7-multilib
+          - g++-7-multilib
   - os: osx
 script: scripts/ci.sh && scripts/test.sh
 deploy:
