@@ -16,7 +16,7 @@ const runBinary = async (binary: Binary): Promise<cp.SpawnSyncReturns<Buffer>> =
 	fs.chmodSync(tmpFile, "755");
 	return cp.spawnSync(tmpFile, {
 		env: {
-			NODE_OPTIONS: "--max-old-space-size=8192",	
+			NODE_OPTIONS: "--max-old-space-size=16384",	
 		},
 	});
 };
