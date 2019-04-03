@@ -7,7 +7,7 @@ cache:
     - /home/travis/.ccache/
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y gcc-6 g++-6 g++-6-multilib
+  - sudo apt-get install -y make g++-multilib
 script: scripts/ci.sh && scripts/test.sh
 deploy:
   provider: gcs
