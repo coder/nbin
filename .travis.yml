@@ -16,7 +16,6 @@ matrix:
         packages:
           - gcc-multilib
           - g++-multilib
-          - build-essentials
   - os: osx
 script: scripts/ci.sh && scripts/test.sh
 deploy:
