@@ -14,7 +14,11 @@ const runBinary = async (binary: Binary): Promise<cp.SpawnSyncReturns<Buffer>> =
 	const tmpFile = path.join(os.tmpdir(), ".nbin-bundlertest" + binId++);
 	fs.writeFileSync(tmpFile, await binary.build());
 	fs.chmodSync(tmpFile, "755");
-	return cp.spawnSync(tmpFile);
+	return cp.spawnSync(tmpFile, {
+		env: {
+			NODE_OPTIONS: "--max-old-space-size=4096",	
+		},
+	});
 };
 
 it("should compile binary and execute it", async () => {
