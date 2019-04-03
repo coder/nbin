@@ -16,10 +16,9 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
-          - gcc-7
-          - g++-7
-          - gcc-7-multilib
-          - g++-7-multilib
+          - gcc-multilib
+          - g++-multilib
+          - build-essentials
   - os: osx
 script: scripts/ci.sh && scripts/test.sh
 deploy:
