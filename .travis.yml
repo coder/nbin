@@ -11,6 +11,7 @@ before_install:
 matrix:
   include:
   - os: linux
+    dist: xenial
     addons:
       apt:
         packages:
