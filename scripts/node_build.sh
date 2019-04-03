@@ -21,7 +21,6 @@ cd ../../
 
 mkdir -p ./build/$PACKAGE_VERSION
 
-
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	OS="linux"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
