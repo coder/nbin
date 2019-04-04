@@ -114,14 +114,16 @@ index 642e5cb1f1..3d298fbf01 100644
  };
  
 diff --git a/src/node.cc b/src/node.cc
-index 3d791f04ad..e982be439a 100644
+index 3d791f04ad..d6ae74884c 100644
 --- a/src/node.cc
 +++ b/src/node.cc
-@@ -3813,6 +3813,9 @@ void ProcessArgv(int* argc,
+@@ -3813,6 +3813,11 @@ void ProcessArgv(int* argc,
                   int* exec_argc,
                   const char*** exec_argv,
                   bool is_env = false) {
 +  if (!getenv("NBIN_BYPASS") && !is_env) {
++	  *exec_argc = 0;
++
 +	  return;
 +  }
    // Parse a few arguments which are specific to Node.

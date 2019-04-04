@@ -1,6 +1,6 @@
 {
 	"name": "@coder/nbin",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Fast and robust node.js binary compiler.",
 	"main": "out/api.js",
 	"typings": "typings/nbin.d.ts",
