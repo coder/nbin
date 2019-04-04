@@ -108,6 +108,12 @@ export const fillFs = (pathName: string): void => {
 	// @ts-ignore
 	override("exists", (callOld) => (pathName: string, callback) => {
 		callback(nbin.existsSync(pathName));
+	}, (pathName: string) => {
+		return new Promise((resolve, reject) => {
+			return fs.exists(pathName, (exists) => {
+				resolve(exists);
+			});
+		});
 	});
 
 	override("existsSync", (callOld) => (pathName: string) => {
