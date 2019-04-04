@@ -3,6 +3,9 @@
 	"version": "1.0.6",
 	"description": "Fast and robust node.js binary compiler.",
 	"main": "out/api.js",
+	"scripts": {	
+		"test": "node node_modules/.bin/jest"	
+	},
 	"typings": "typings/nbin.d.ts",
 	"author": "Coder",
 	"license": "MIT",

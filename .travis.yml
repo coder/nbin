@@ -1,4 +1,3 @@
-dist: xenial
 language: node_js
 node_js:
 - 8.15.0
@@ -6,8 +5,19 @@ cache:
   directories:
     - /home/travis/.ccache/
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y make g++-multilib
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+  - export PATH="/usr/local/opt/ccache/libexec:$PATH"
+  - eval "$(MATRIX_EVAL)"
+matrix:
+  include:
+  - os: linux
+    dist: xenial
+    addons:
+      apt:
+        packages:
+          - gcc-multilib
+          - g++-multilib
+  - os: osx
 script: scripts/ci.sh && scripts/test.sh
 deploy:
   provider: gcs
