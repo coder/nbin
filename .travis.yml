@@ -1,4 +1,5 @@
 language: node_js
+osx_image: xcode10.2
 node_js:
 - 10.15.1
 cache:
