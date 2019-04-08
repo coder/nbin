@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 cd ../lib/node
-git diff -w -- lib/module.js lib/internal/bootstrap_node.js src/node.cc --unified=0 > ../../node.patch
+git diff -w -- lib/internal/modules/cjs/loader.js lib/internal/bootstrap/node.js src/node.cc --unified=0 > ../../node.patch

@@ -44,9 +44,13 @@ if (process.platform === "linux") {
 			mainFile,
 		});
 		bin.writeModule(path.join(__dirname, "../../node_modules", "node-pty"));
-		bin.writeFile(mainFile, Buffer.from(`require("node-pty");`));
+		bin.writeFile(mainFile, Buffer.from(`require("node-pty");console.log("hi");`));
 		const resp = await runBinary(bin);
-		expect(resp.stderr.toString().trim().length).toEqual(0);
+		const stderr = resp.stderr.toString().trim();
+		if (stderr.length > 0) {
+			console.error(stderr);
+		}
+		expect(stderr.length).toEqual(0);
 	});
 }
 
