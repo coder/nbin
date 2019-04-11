@@ -40,6 +40,11 @@ declare module 'nbin' {
 	function readFileSync(path: string, encoding?: "utf8", offset?: number, length?: number): Buffer;
 
 	/**
+	 * Uniquely generated ID for the packaged binary.
+	 */
+	export const id: string;
+
+	/**
 	 * Returns the entrypoint of the application.
 	 */
 	export const mainFile: string;
@@ -97,7 +102,7 @@ declare module '@coder/nbin' {
 		 * Will bundle a module based on path and name.
 		 * Allows you to do `writeModule("/test/bananas/node_modules/frog")` and
 		 * embed the `frog` module within the binary.
-		 * 
+		 *
 		 * All modules by default will be placed in `/node_modules`
 		 */
 		public writeModule(modulePath: string): void;

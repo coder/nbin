@@ -1,11 +1,11 @@
 diff --git a/lib/internal/bootstrap/node.js b/lib/internal/bootstrap/node.js
-index 885546c5d6..f1287bb191 100644
+index 885546c5d6..f21e7993f1 100644
 --- a/lib/internal/bootstrap/node.js
 +++ b/lib/internal/bootstrap/node.js
 @@ -215,11 +215,16 @@
      // are running from a script and running the REPL - but there are a few
      // others like the debugger or running --eval arguments. Here we decide
- 	// which mode we run in.
+     // which mode we run in.
 +
 +    if (NativeModule.exists('_third_party_main')) {
 +	  NativeModule.require('_third_party_main');
@@ -21,7 +21,7 @@ index 885546c5d6..f1287bb191 100644
        // one to drop a file lib/_third_party_main.js into the build
        // directory which will be executed instead of Node's normal loading.
 diff --git a/lib/internal/modules/cjs/loader.js b/lib/internal/modules/cjs/loader.js
-index fb3770b729..eb65385afe 100644
+index fb3770b729..f4bad8d6de 100644
 --- a/lib/internal/modules/cjs/loader.js
 +++ b/lib/internal/modules/cjs/loader.js
 @@ -44,6 +44,9 @@ const { getOptionValue } = require('internal/options');
@@ -101,17 +101,19 @@ index fb3770b729..eb65385afe 100644
    try {
      module.exports = JSON.parse(stripBOM(content));
    } catch (err) {
-@@ -715,7 +742,14 @@ Module._extensions['.json'] = function(module, filename) {
+@@ -715,7 +742,16 @@ Module._extensions['.json'] = function(module, filename) {
  
  // Native extension for .node
  Module._extensions['.node'] = function(module, filename) {
 -  return process.dlopen(module, path.toNamespacedPath(filename));
 +  let isInternal = false;
 +  if (nbin.existsSync(filename)) {
-+    const tmpFile = path.join(os.tmpdir(), `.nbin-${path.basename(filename)}`);
-+    fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
-+	filename = tmpFile;
-+	isInternal = true;
++    const tmpFile = path.join(os.tmpdir(), `.nbin${nbin.id}-${path.basename(filename)}`);
++    if (!fs.existsSync(tmpFile)) {
++        fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
++    }
++    filename = tmpFile;
++    isInternal = true;
 +  }
 +  return process.dlopen(module, isInternal ? filename : path.toNamespacedPath(filename));
  };

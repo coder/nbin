@@ -13,12 +13,15 @@ const nbinFd = fs.openSync(execPath, "r");
 // Footer is located at the end of the file
 const footer = readFooter(nbinFd, execPathStat.size);
 
-// Contains the mainFile and the filesystem
-const mainFileFsBuffer = Buffer.allocUnsafe(footer.headerLength);
-fs.readSync(nbinFd, mainFileFsBuffer, 0, footer.headerLength, footer.headerOffset);
+// Contains the ID, mainFile and the filesystem
+const headerBuffer = Buffer.allocUnsafe(footer.headerLength);
+fs.readSync(nbinFd, headerBuffer, 0, footer.headerLength, footer.headerOffset);
+
+// Reading the ID.
+const id = readString(headerBuffer, 0);
 
 // Reading the mainfile
-const mainFile = readString(mainFileFsBuffer, 0);
+const mainFile = readString(headerBuffer, id.offset);
 
 /**
  * Maximize read perf by storing before any overrides
@@ -26,7 +29,7 @@ const mainFile = readString(mainFileFsBuffer, 0);
 const originalRead = fs.read;
 const originalReadSync = fs.readSync;
 
-const fsBuffer = mainFileFsBuffer.slice(mainFile.offset);
+const fsBuffer = headerBuffer.slice(mainFile.offset);
 const readableFs = ReadableFilesystem.fromBuffer(fsBuffer, {
 	readContents: (offset: number, length: number): Promise<Buffer> => {
 		const buffer = Buffer.allocUnsafe(length);
@@ -81,6 +84,8 @@ const createNotFound = (): Error => {
 };
 
 const exported: typeof import("nbin") = {
+	id: id.value,
+
 	mainFile: mainFile.value,
 
 	existsSync: (pathName: string): boolean => {
