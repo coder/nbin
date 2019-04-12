@@ -11,8 +11,6 @@ import { WritableFilesystem } from "../common/filesystem";
 import { createFooter } from "../common/footer";
 import ora, { Ora } from "ora";
 
-declare const __non_webpack_require__: typeof require;
-
 export class Binary implements nbin.Binary {
 	private readonly fs: WritableFilesystem = new WritableFilesystem();
 
@@ -87,6 +85,15 @@ export class Binary implements nbin.Binary {
 	public async build(): Promise<Buffer> {
 		const nodeBuffer = await this.cacheBinary();
 
+		// Create a buffer containing a (most likely) unique ID and its length.
+		const idLength = 6;
+		const possible = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		const id = Array(idLength).fill(1)
+			.map(() => possible[Math.floor(Math.random() * possible.length)])
+			.join("");
+		const idBuffer = Buffer.alloc(2 + Buffer.byteLength(id));
+		writeString(idBuffer, id);
+
 		// Writing the entrypoint
 		const mainFileBuffer = Buffer.alloc(2 + Buffer.byteLength(this.options.mainFile));
 		writeString(mainFileBuffer, this.options.mainFile);
@@ -99,19 +106,19 @@ export class Binary implements nbin.Binary {
 
 		// Footer
 		const footerBuffer = createFooter(
-			fsBuffer.header.byteLength + mainFileBuffer.byteLength, // Header byte length
+			fsBuffer.header.byteLength + idBuffer.byteLength + mainFileBuffer.byteLength, // Header byte length
 			nodeBuffer.byteLength, // Header byte offset
 			fsBuffer.fileContents.byteLength, // File contents length
-			nodeBuffer.byteLength + fsBuffer.header.byteLength + mainFileBuffer.byteLength, // File contents offset
-			);
+			nodeBuffer.byteLength + fsBuffer.header.byteLength + idBuffer.byteLength + mainFileBuffer.byteLength, // File contents offset
+		);
 
-		return Buffer.concat([nodeBuffer, mainFileBuffer, fsBuffer.header, fsBuffer.fileContents, footerBuffer]);
+		return Buffer.concat([nodeBuffer, idBuffer, mainFileBuffer, fsBuffer.header, fsBuffer.fileContents, footerBuffer]);
 	}
 
 	private async cacheBinary(): Promise<Buffer> {
 		let nodeBinaryPath = this.options.nodePath || path.join(__dirname, "../../lib/node/out/Release/node");
 		const nodeBinaryName = this.nodeBinaryName;
-		
+
 		const cacheDir = path.join(os.homedir(), ".nbin");
 		if (!fs.existsSync(nodeBinaryPath)) {
 			if (!fs.existsSync(cacheDir)) {
