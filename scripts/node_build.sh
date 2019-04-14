@@ -23,6 +23,8 @@ mkdir -p ./build/$PACKAGE_VERSION
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	OS="linux"
+elif [[ "$OSTYPE" == "linux-musl" ]]; then
+	OS="alpine"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	OS="darwin"
 fi

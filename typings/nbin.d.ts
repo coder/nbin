@@ -74,6 +74,11 @@ declare module '@coder/nbin' {
 		 */
 		readonly mainFile: string;
 
+		/**
+		 * OS target
+		 */
+		readonly target?: "darwin" | "alpine" | "linux";
+
 	}
 
 	/**

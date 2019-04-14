@@ -165,7 +165,7 @@ export class Binary implements nbin.Binary {
 	}
 
 	private get nodeBinaryName(): string {
-		const currentPlatform = os.platform();
+		const currentPlatform = this.options.target || os.platform();
 		let currentArchitecture = os.arch();
 		if (currentArchitecture === "x64") {
 			currentArchitecture = "x86_64";
