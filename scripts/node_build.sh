@@ -7,7 +7,7 @@ cd ../lib/node
 export CC="ccache gcc"
 export CXX='ccache g++'
 echo "Configuring with --dest-cpu=x64"
-./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64 --openssl-no-asm
+./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64
 make -j2 &>/dev/null &
 pid=$!
 (
