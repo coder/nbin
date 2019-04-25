@@ -16,13 +16,13 @@ function docker_build() {
 	docker exec $containerID mkdir /src
 
 	function exec() {
-		docker exec -w /src $containerID bash -c "$@"
+		docker exec $containerID bash -c "$@"
 	}
 
 	docker cp ../. $containerID:/src
 	exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
-	exec "npm rebuild"
-	exec "npm test"
+	exec "cd /src && npm rebuild"
+	exec "cd /src && npm test"
 	docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
 }
 
