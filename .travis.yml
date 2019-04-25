@@ -8,7 +8,7 @@ cache:
   directories:
     - /home/travis/.ccache/
     - /home/travis/.centos-ccache/
-    - /home/travis/.alpine-ccache
+    - /home/travis/.alpine-ccache/
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - export PATH="/usr/local/opt/ccache/libexec:$PATH"
