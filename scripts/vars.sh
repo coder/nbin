@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd "$(dirname "$0")"
 NODE_VERSION=10.15.1
 PACKAGE_VERSION=$(cat ../package.json \
   | grep version \

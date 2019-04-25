@@ -2,9 +2,13 @@ language: node_js
 osx_image: xcode10.2
 node_js:
 - 10.15.1
+services:
+- docker
 cache:
   directories:
     - /home/travis/.ccache/
+    - /home/travis/.centos-ccache/
+    - /home/travis/.alpine-ccache
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - export PATH="/usr/local/opt/ccache/libexec:$PATH"
@@ -12,14 +16,8 @@ before_install:
 matrix:
   include:
   - os: linux
-    dist: xenial
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
   - os: osx
-script: scripts/ci.sh && scripts/test.sh
+script: scripts/ci.sh
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM
