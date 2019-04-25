@@ -9,7 +9,8 @@ source ./vars.sh
 ./webpack_build.sh
 
 cp ./node_build.sh ../lib/node/build.sh
-mkdir -p ./build/$PACKAGE_VERSION
+mkdir -p ../build/$PACKAGE_VERSION
+rm ../lib/node/test/fixtures/packages/unparseable/package.json
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	./mac_build.sh
