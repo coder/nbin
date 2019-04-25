@@ -5,13 +5,14 @@ set -euxo pipefail
 
 export CC="ccache gcc"
 export CXX="ccache g++"
-export CCACHE_DIR="/ccache"
-./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64 --openssl-no-asm
 if [[ "$OSTYPE" == "darwin"* ]]; then
-	cores="2"
+	export CCACHE_DIR="~/.ccache"
+	export cores="2"
 else
-	cores=$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)
+	export CCACHE_DIR="/ccache"
+	export cores=$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)
 fi
+./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64 --openssl-no-asm
 make -j$cores &>/dev/null &
 pid=$!
 (
