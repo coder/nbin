@@ -16,6 +16,9 @@ before_install:
 matrix:
   include:
   - os: linux
+    env:
+      - TARGET="alpine"
+      - TARGET="centos"
   - os: osx
 script: scripts/ci.sh
 deploy:
