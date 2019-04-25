@@ -18,6 +18,8 @@ matrix:
   - os: linux
     env:
       - TARGET="alpine"
+  - os: linux
+    env:
       - TARGET="centos"
   - os: osx
 script: scripts/ci.sh
