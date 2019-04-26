@@ -13,7 +13,7 @@ else
 	export cores=$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)
 fi
 ./configure --link-module './nbin.js' --link-module './lib/_third_party_main.js' --dest-cpu=x64 --openssl-no-asm
-make -j$cores &>/dev/null &
+make -j$cores &
 pid=$!
 (
 	while true; do
