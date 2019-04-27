@@ -1,6 +1,6 @@
 # nbin
 
-[!["Open Issues"](https://img.shields.io/github/issues-raw/codercom/nbin.svg)](https://github.com/codercom/nbin/issues)
+[!["Open Issues"](https://img.shields.io/github/issues-raw/cdr/nbin.svg)](https://github.com/cdr/nbin/issues)
 [!["Version"](https://img.shields.io/npm/v/@coder/nbin.svg)](https://www.npmjs.com/package/@coder/nbin)
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Discord](https://discordapp.com/api/guilds/463752820026376202/widget.png)](https://discord.gg/zxSwN8Z)
