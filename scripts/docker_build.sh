@@ -11,19 +11,40 @@ source ./vars.sh
 # $PREBUILD_COMMAND
 # $BINARY_NAME
 function docker_build() {
-	containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
-	docker start $containerID
-	docker exec $containerID mkdir /src
+	case "$IMAGE" in
+	*armv7hf* | armv7hf | aarch64 | *aarch64*)
+	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	 docker start $containerID
+	 docker exec $containerID mkdir /src
 
-	function exec() {
-		docker exec $containerID bash -c "$@"
-	}
+	 function exec() {
+	 	 docker exec $containerID bash -c "$@"
+	 }
 
-	docker cp ../. $containerID:/src
-	exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
-	exec "cd /src && npm rebuild"
-	exec "cd /src && npm test"
-	docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
+	 docker cp ../. $containerID:/src
+	 exec "cross-build-start"
+	 exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
+	 exec "cd /src && npm rebuild"
+	 exec "cd /src && npm test"
+	 exec "cross-build-end"
+	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
+	 ;;
+	*)
+	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	 docker start $containerID
+	 docker exec $containerID mkdir /src
+
+	 function exec() {
+	 	 docker exec $containerID bash -c "$@"
+	 }
+
+	 docker cp ../. $containerID:/src
+	 exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
+	 exec "cd /src && npm rebuild"
+	 exec "cd /src && npm test"
+	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
+	;;
+    esac
 }
 
 if [[ "$TARGET" == "alpine" ]]; then
