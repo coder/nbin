@@ -44,6 +44,18 @@ elif [[ "$TARGET" == "armv7hf-alpine" ]]; then
 	PREBUILD_COMMAND=""
 	BINARY_NAME="node-${NODE_VERSION}-alpine-armhf"
 	docker_build
+elif [[ "$TARGET" == "aarch64" ]]; then
+	CACHE_DIR=".ccache-aarch64"
+	IMAGE="codercom/nbin-alpine"
+	PREBUILD_COMMAND=""
+	BINARY_NAME="node-${NODE_VERSION}-aarch64"
+	docker_build
+elif [[ "$TARGET" == "armv7hf" ]]; then
+	CACHE_DIR=".ccache-armhf"
+	IMAGE="codercom/nbin-alpine"
+	PREBUILD_COMMAND=""
+	BINARY_NAME="node-${NODE_VERSION}-armhf"
+	docker_build
 else
 	CACHE_DIR=".ccache-centos"
 	IMAGE="codercom/nbin-centos"
