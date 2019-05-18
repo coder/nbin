@@ -20,6 +20,12 @@ matrix:
       - TARGET="alpine"
   - os: linux
     env:
+      - TARGET="armv7hf-alpine"
+  - os: linux
+    env:
+      - TARGET="aarch64-alpine"
+  - os: linux
+    env:
       - TARGET="centos"
   - os: osx
 script: scripts/ci.sh
