@@ -32,6 +32,18 @@ if [[ "$TARGET" == "alpine" ]]; then
 	PREBUILD_COMMAND=""
 	BINARY_NAME="node-${NODE_VERSION}-alpine-x64"
 	docker_build
+elif [[ "$TARGET" == "aarch64-alpine" ]]
+	CACHE_DIR=".ccache-alpine"
+	IMAGE="codercom/nbin-alpine"
+	PREBUILD_COMMAND=""
+	BINARY_NAME="node-${NODE_VERSION}-alpine-aarch64"
+	docker_build
+elif [[ "$TARGET" == "armv7hf-alpine" ]]
+	CACHE_DIR=".ccache-alpine"
+	IMAGE="codercom/nbin-alpine"
+	PREBUILD_COMMAND=""
+	BINARY_NAME="node-${NODE_VERSION}-alpine-armhf"
+	docker_build
 else
 	CACHE_DIR=".ccache-centos"
 	IMAGE="codercom/nbin-centos"
