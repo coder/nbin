@@ -7,7 +7,7 @@
 
 Fast and robust node.js binary compiler.
 
-**WARNING:** This project was created for [code-server](https://github.com/codercom/code-server) and may provide limited support.
+**WARNING:** This project was created for [code-server](https://github.com/cdr/code-server) and may provide limited support.
 
 Why was this made? Why not use `pkg` or `nexe`?
 
