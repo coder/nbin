@@ -8,6 +8,12 @@
 import * as nbin from "nbin";
 
 /**
+ * Specify the version of nbin this binary was built with. This is
+ * automatically replaced by webpack.
+ */
+process.versions.nbin = '<NBIN_VERSION>';
+
+/**
  * If bypassing nbin don't touch a thing.
  */
 if (!process.env.NBIN_BYPASS) {
@@ -15,3 +21,4 @@ if (!process.env.NBIN_BYPASS) {
 		process.argv.splice(1, 0, nbin.mainFile);
 	}
 }
+

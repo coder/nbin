@@ -5,6 +5,7 @@ const HappyPack = require("happypack");
 const webpack = require("webpack");
 
 const root = path.resolve(__dirname);
+const pkg = require("./package.json");
 
 const baseConfig = {
 	context: root,
@@ -12,9 +13,16 @@ const baseConfig = {
 	target: "node",
 	module: {
 		rules: [{
-			use: [{
-				loader: "happypack/loader?id=ts",
-			}],
+			use: [
+				{
+					loader: "string-replace-loader",
+					options: {
+						search: "<NBIN_VERSION>",
+						replace: pkg.version,
+					},
+				},
+				"happypack/loader?id=ts",
+			],
 			test: /(^.?|\.[^d]|[^.]d|[^.][^d])\.tsx?$/,
 		}, {
 			use: [{
