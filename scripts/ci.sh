@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euox pipefail
+set -euxo pipefail
 
 cd "$(dirname "$0")"
 source ./vars.sh

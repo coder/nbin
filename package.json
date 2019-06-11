@@ -1,10 +1,10 @@
 {
 	"name": "@coder/nbin",
-	"version": "1.1.2",
+	"version": "1.2.0",
 	"description": "Fast and robust node.js binary compiler.",
 	"main": "out/api.js",
-	"scripts": {	
-		"test": "node node_modules/.bin/jest"	
+	"scripts": {
+		"test": "node node_modules/.bin/jest"
 	},
 	"typings": "typings/nbin.d.ts",
 	"author": "Coder",
@@ -25,7 +25,7 @@
 		"ts-loader": "^5.3.3",
 		"typescript": "^3.3.4000",
 		"webpack": "^4.29.6",
-		"webpack-cli": "^3.3.0",
+		"webpack-cli": "^3.3.3",
 		"webpack-dev-server": "^3.2.1"
 	},
 	"jest": {
