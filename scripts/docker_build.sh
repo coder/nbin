@@ -18,15 +18,15 @@ function docker_build() {
 	 docker exec $containerID mkdir /src
 
 	 function exec() {
-	 	 docker exec $containerID bash -c "$@"
+         # HACK: cross-build-start and cross-build end is needed to be wrapped around commands.
+         # This is inevitably the only way to perform cross-targeting in-Docker.
+	 	 docker exec $containerID bash -c "cross-build-start; $@; cross-build-end"
 	 }
 
 	 docker cp ../. $containerID:/src
-	 exec "cross-build-start"
 	 exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
 	 exec "cd /src && npm rebuild"
 	 exec "cd /src && npm test"
-	 exec "cross-build-end"
 	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
 	 ;;
 	*)
