@@ -13,38 +13,38 @@ source ./vars.sh
 function docker_build() {
 	case "$IMAGE" in
 	*armv7hf* | armv7hf | aarch64 | *aarch64*)
-	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
-	 docker start $containerID
-	 docker exec $containerID mkdir /src
+	containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	docker start $containerID
+	docker exec $containerID mkdir /src
 
-	 function exec() {
-         # HACK: cross-build-start and cross-build end is needed to be wrapped around commands.
-         # This is inevitably the only way to perform cross-targeting in-Docker.
-	 	 docker exec $containerID bash -c "cross-build-start; $@; cross-build-end"
-	 }
+	function exec() {
+		# HACK: cross-build-start and cross-build end is needed to be wrapped around commands.
+		# This is inevitably the only way to perform cross-targeting in-Docker.
+		docker exec $containerID bash -c "cross-build-start; $@; cross-build-end"
+	}
 
-	 docker cp ../. $containerID:/src
-	 exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
-	 exec "cd /src && npm rebuild"
-	 exec "cd /src && npm test"
-	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
-	 ;;
+		docker cp ../. $containerID:/src
+		exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
+		exec "cd /src && npm rebuild"
+		exec "cd /src && npm test"
+		docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
+		;;
 	*)
-	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
-	 docker start $containerID
-	 docker exec $containerID mkdir /src
+	containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	docker start $containerID
+	docker exec $containerID mkdir /src
 
-	 function exec() {
-	 	 docker exec $containerID bash -c "$@"
-	 }
+	function exec() {
+		docker exec $containerID bash -c "$@"
+	}
 
-	 docker cp ../. $containerID:/src
-	 exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
-	 exec "cd /src && npm rebuild"
-	 exec "cd /src && npm test"
-	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
-	;;
-    esac
+		docker cp ../. $containerID:/src
+		exec "$PREBUILD_COMMAND/src/lib/node/build.sh"
+		exec "cd /src && npm rebuild"
+		exec "cd /src && npm test"
+		docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
+		;;
+	esac
 }
 
 if [[ "$TARGET" == "alpine" ]]; then
