@@ -1,4 +1,5 @@
 import { readString, writeString } from "./buffer";
+import { createNotFound } from "./error";
 
 interface Stat {
 	readonly isFile: boolean;
@@ -91,7 +92,7 @@ export class ReadableFilesystem extends Filesystem {
 	public read(name: string, offset?: number, length?: number): Promise<Buffer> {
 		const file = this.files.get(name);
 		if (!file) {
-			return Promise.reject("File not found");
+			return Promise.reject(createNotFound());
 		}
 		return file.read(offset, length);
 	}
@@ -99,7 +100,7 @@ export class ReadableFilesystem extends Filesystem {
 	public readSync(name: string, offset?: number, length?: number): Buffer {
 		const file = this.files.get(name);
 		if (!file) {
-			throw new Error("File not found");
+			throw createNotFound();
 		}
 		return file.readSync(offset, length);
 	}
