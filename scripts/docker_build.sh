@@ -13,7 +13,7 @@ source ./vars.sh
 function docker_build() {
 	case "$IMAGE" in
 	*armv7hf* | armv7hf | aarch64 | *aarch64*)
-	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	 containerID=$(docker create --network=host -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
 	 docker start $containerID
 	 docker exec $containerID mkdir /src
 
@@ -30,7 +30,7 @@ function docker_build() {
 	 docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
 	 ;;
 	*)
-	 containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	 containerID=$(docker create --network=host -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
 	 docker start $containerID
 	 docker exec $containerID mkdir /src
 
@@ -84,4 +84,3 @@ else
 	BINARY_NAME="node-${NODE_VERSION}-linux-x64"
 	docker_build
 fi
-
