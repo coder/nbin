@@ -2,6 +2,7 @@ import * as fs from "fs";
 import { Stat } from "nbin";
 import * as path from "path";
 import { readString } from "../common/buffer";
+import { createNotFound } from "../common/error";
 import { ReadableFilesystem } from "../common/filesystem";
 import { readFooter } from "../common/footer";
 import { fillFs } from "./fs";
@@ -75,12 +76,6 @@ const parse = (fullPath: string): {
 			fs = fs.cd(part);
 		}
 	}
-};
-
-const createNotFound = (): Error => {
-	const e = new Error("File not found");
-	Object.defineProperty(e, "code", { value: "ENOENT" });
-	return e;
 };
 
 const exported: typeof import("nbin") = {
