@@ -139,10 +139,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@coder/logger@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@coder/logger/-/logger-1.0.3.tgz#e0e1ae5496fde5a3c6ef3d748fdfb26a55add8b8"
-  integrity sha512-1o5qDZX2VZUNnzgz5KfAdMnaqaX6FNeTs0dUdg73MRHfQW94tFTIryFC1xTTCuzxGDjVHOHkaUAI4uHA2bheOA==
+"@coder/logger@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@coder/logger/-/logger-1.1.8.tgz#416a7221d84161ee35eca9cfa93ba9377639b4ee"
+  integrity sha512-NJDC4rZTx0deVYqAxZtJWACq3IrVR59BjFeZebO3i7OfTZZMkkbLsGsCFMnJd5KnX6KjnvvFq4XXtwJ9yf8/YQ==
 
 "@jest/console@^24.3.0":
   version "24.3.0"
