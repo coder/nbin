@@ -119,7 +119,7 @@ export class Binary implements nbin.Binary {
 		let nodeBinaryPath = this.options.nodePath || path.join(__dirname, "../../lib/node/out/Release/node");
 		const nodeBinaryName = this.nodeBinaryName;
 
-		const cacheDir = path.join(os.homedir(), ".nbin");
+		const cacheDir = process.env.XDG_DATA_HOME ? path.join(process.env.XDG_DATA_HOME, "nbin") : path.join(os.homedir(), ".nbin");
 		if (!fs.existsSync(nodeBinaryPath)) {
 			if (!fs.existsSync(cacheDir)) {
 				if (this.canLog) {
