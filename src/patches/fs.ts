@@ -20,7 +20,7 @@ export const fillFs = (pathName: string): void => {
 				// @ts-ignore
 				return oldfunc(...args);
 			};
-			
+
 			let realPath = args[0];
 
 			/**
@@ -255,7 +255,7 @@ export const fillFs = (pathName: string): void => {
 		if (typeof args[0] === "string") {
 			encoding = args[0];
 		}
-		if (typeof args[0] === "object") {
+		if (typeof args[0] === "object" && args[0] !== null) {
 			const opts = args[0];
 			if (opts.encoding) {
 				encoding = opts.encoding;
@@ -278,7 +278,7 @@ export const fillFs = (pathName: string): void => {
 		if (typeof args[0] === "string") {
 			encoding = args[0];
 		}
-		if (typeof args[0] === "object") {
+		if (typeof args[0] === "object" && args[0] !== null) {
 			const opts = args[0];
 			if (opts.encoding) {
 				encoding = opts.encoding;
