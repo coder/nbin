@@ -45,4 +45,4 @@ deploy:
   local-dir: build
   on:
     branch: master
-    repo: codercom/nbin
+    repo: cdr/nbin
