@@ -16,25 +16,22 @@ jobs:
       
       - name: Setup Builder instance
         run: |
+            export DOCKER_CLI_EXPERMIENTAL=enabled
             docker buildx create --name cdr-build
             docker buildx use cdr-build
             docker buildx inspect --bootstrap
       
       - name: Build Images - ARM (CentOS)
         run: |
+           export DOCKER_CLI_EXPERMIENTAL=enabled
            docker buildx build --platform linux/arm -t codercom/nbin-centos:arm -f centos.dockerfile
            docker buildx build --platform linux/arm64 -t codercom/nbin-centos:arm64 -f centos.dockerfile
       
       - name: Build Images - ARM (Alpine)
         run: |
+           export DOCKER_CLI_EXPERMIENTAL=enabled
            docker buildx build --platform linux/arm -t codercom/nbin-alpine:arm -f alpine.dockerfile
            docker buildx build --platform linux/arm64 -t codercom/nbin-alpine:arm64 -f alpine.dockerfile
-
-      - name: Build Images - AMD64 (CentOS)
-        run: docker buildx build --platform linux/amd64 -t codercom/nbin-centos:amd64 -f centos.dockerfile
-      
-      - name: Build Images - AMD64 (Alpine)
-        run: docker buildx build --platform linux/amd64 -t codercom/nbin-alpine:amd64 -f alpine.dockerfile
 
   build_amd64:
     runs-on: ubuntu-latest
@@ -46,12 +43,17 @@ jobs:
       
       - name: Setup Builder instance
         run: |
+            export DOCKER_CLI_EXPERMIENTAL=enabled
             docker buildx create --name cdr-build
             docker buildx use cdr-build
             docker buildx inspect --bootstrap
 
       - name: Build Images - AMD64 (CentOS)
-        run: docker buildx build --platform linux/amd64 -t codercom/nbin-centos:amd64 -f centos.dockerfile
+        run: |
+          export DOCKER_CLI_EXPERMIENTAL=enabled
+          docker buildx build --platform linux/amd64 -t codercom/nbin-centos:amd64 -f centos.dockerfile
       
       - name: Build Images - AMD64 (Alpine)
-        run: docker buildx build --platform linux/amd64 -t codercom/nbin-alpine:amd64 -f alpine.dockerfile
+        run: |
+         export DOCKER_CLI_EXPERMIENTAL=enabled
+         docker buildx build --platform linux/amd64 -t codercom/nbin-alpine:amd64 -f alpine.dockerfile
