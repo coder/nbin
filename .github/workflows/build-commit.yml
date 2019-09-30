@@ -13,6 +13,14 @@ jobs:
 
       - name: Install Docker Edge Build (for Xbuild runs)
         run: wget -qO - https://test.docker.com | sh
+
+      
+      - name: Install buildx
+        run: |
+          mkdir -p  $HOME/.docker/cli-plugins/
+          touch $HOME/.docker/cli-plugins/docker-buildx
+          wget -qO - https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64 > $HOME/.docker/cli-plugins/docker-buildx
+          chmod a+x $HOME/.docker/cli-plugins/docker-buildx
       
       - name: Setup Builder instance
         run: |
