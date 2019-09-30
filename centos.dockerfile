@@ -1,6 +1,6 @@
 FROM centos:7
 
-RUN yum install -y centos-release-scl
+RUN yum -y update && yum install -y centos-release-scl
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
 RUN yum install -y devtoolset-6
 RUN yum install -y gcc-c++
