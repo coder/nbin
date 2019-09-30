@@ -27,15 +27,15 @@ jobs:
             docker buildx inspect --bootstrap
             docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       
-      - name: Build Images - ARM64 (CentOS)
+      - name: Build Images - ARM64
         run: |
            export DOCKER_CLI_EXPERMIENTAL=enabled
-           docker buildx build --platform linux/arm64 -t codercom/nbin-centos:arm64 -f centos.dockerfile .
+           docker buildx build --platform linux/arm64 -t codercom/nbin-arm:arm64 -f arm.dockerfile .
 
-      - name: Build Images - ARM (CentOS)
+      - name: Build Images - ARM
         run: |
            export DOCKER_CLI_EXPERMIENTAL=enabled
-           docker buildx build --platform linux/arm -t codercom/nbin-centos:arm -f centos.dockerfile .
+           docker buildx build --platform linux/arm -t codercom/nbin-arm:arm -f arm.dockerfile .
       
       - name: Build Images - ARM64 (Alpine)
         run: |
@@ -54,9 +54,9 @@ jobs:
 
       - name: "Push to Registry"
         run: |
-          docker push codercom/nbin-centos:arm
+          docker push codercom/nbin-arm:arm
           docker push codercom/nbin-alpine:arm   
-          docker push codercom/nbin-centos:arm64
+          docker push codercom/nbin-arm:arm64
           docker push codercom/nbin-alpine:arm64
 
   build_amd64:
