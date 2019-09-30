@@ -12,15 +12,15 @@ source ./vars.sh
 # $BINARY_NAME
 function docker_build() {
 	case "$IMAGE" in
-	*armv7hf* | armv7hf | aarch64 | *aarch64*)
-	containerID=$(docker create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	*arm | *arm64)
+	containerID=$(docker buildx create -it -v $HOME/$CACHE_DIR:/ccache $IMAGE)
+	# HACK: We can leverage the same VMs we use to make x86 builds but in expense of using QEMU
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker start $containerID
 	docker exec $containerID mkdir /src
 
 	function exec() {
-		# HACK: cross-build-start and cross-build end is needed to be wrapped around commands.
-		# This is inevitably the only way to perform cross-targeting in-Docker.
-		docker exec $containerID bash -c "cross-build-start; $@; cross-build-end"
+		docker exec $containerID bash -c "$@"
 	}
 
 		docker cp ../. $containerID:/src
