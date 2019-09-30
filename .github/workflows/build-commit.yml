@@ -29,4 +29,7 @@ jobs:
             docker buildx create --name cdr-build
             docker buildx use cdr-build
             docker buildx inspect --bootstrap
+      
+      - name: Build for ARM
+        run: scripts/ci.bash 
           

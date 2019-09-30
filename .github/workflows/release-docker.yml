@@ -54,10 +54,10 @@ jobs:
 
       - name: "Push to Registry"
         run: |
-          docker push codercom/nbin-arm:arm
-          docker push codercom/nbin-alpine:arm   
-          docker push codercom/nbin-arm:arm64
-          docker push codercom/nbin-alpine:arm64
+          docker push codercom/nbin-arm:latest
+          docker push codercom/nbin-alpine-arm:latest   
+          docker push codercom/nbin-arm64:latest
+          docker push codercom/nbin-alpine-arm64:latest
 
   build_amd64:
     runs-on: ubuntu-latest
