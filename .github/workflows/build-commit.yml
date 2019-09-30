@@ -11,29 +11,29 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Install Docker Edge Build (for Xbuild commands)
-        command: wget -qO - https://test.docker.com | sh
+      - name: Install Docker Edge Build (for Xbuild runs)
+        run: wget -qO - https://test.docker.com | sh
       
       - name: Setup Builder instance
-        command: |
+        run: |
             docker buildx create --name cdr-build
             docker buildx use cdr-build
             docker buildx inspect --bootstrap
       
       - name: Build Images - ARM (CentOS)
-        command: |
+        run: |
            docker buildx build --platform linux/arm -t cdr/nbin-centos:arm -f centos.dockerfile
            docker buildx build --platform linux/arm64 -t cdr/nbin-centos:arm64 -f centos.dockerfile
       
       - name: Build Images - ARM (Alpine)
-        command: |
+        run: |
            docker buildx build --platform linux/arm -t cdr/nbin-alpine:arm -f alpine.dockerfile
            docker buildx build --platform linux/arm64 -t cdr/nbin-alpine:arm64 -f alpine.dockerfile
 
       - name: Build Images - AMD64 (CentOS)
-        command: |
+        run: |
            docker buildx build --platform linux/amd64 -t cdr/nbin-centos:amd64 -f centos.dockerfile
       
       - name: Build Images - AMD64 (Alpine)
-        command: |
+        run: |
            docker buildx build --platform linux/amd64 -t cdr/nbin-alpine:amd64 -f alpine.dockerfile
