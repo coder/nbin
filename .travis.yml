@@ -16,21 +16,16 @@ before_install:
 matrix:
   include:
   - os: linux
+    arch:
+      - arm64
+      - amd64
     env:
       - TARGET="alpine"
   - os: linux
-    env:
-      - TARGET="armv7hf-alpine"
   - os: linux
-    env:
-      - TARGET="aarch64-alpine"
-  - os: linux
-    env:
-      - TARGET="aarch64"
-  - os: linux
-    env:
-      - TARGET="armv7hf"
-  - os: linux
+    arch:
+      - arm64
+      - amd64
     env:
       - TARGET="centos"
   - os: osx
