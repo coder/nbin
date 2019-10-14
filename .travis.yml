@@ -22,7 +22,6 @@ matrix:
     env:
       - TARGET="alpine"
   - os: linux
-  - os: linux
     arch:
       - arm64
       - amd64
