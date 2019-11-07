@@ -28,16 +28,30 @@ function docker_build() {
 	docker cp $containerID:/src/lib/node/out/Release/node ../build/$PACKAGE_VERSION/$BINARY_NAME
 }
 
-if [[ "$TARGET" == "alpine" ]]; then
-	CACHE_DIR=".ccache-alpine"
-	IMAGE="codercom/nbin-alpine"
-	PREBUILD_COMMAND=""
-	BINARY_NAME="node-${NODE_VERSION}-${ARCH}"
-	docker_build
-else
-	CACHE_DIR=".ccache-centos"
-	IMAGE="codercom/nbin-centos"
-	PREBUILD_COMMAND="source /opt/rh/devtoolset-6/enable &&"
-	BINARY_NAME="node-${NODE_VERSION}-${ARCH}"
-	docker_build
-fi
+case "$TARGET" in 
+    alpine)
+	   CACHE_DIR=".ccache-alpine"
+	   IMAGE="codercom/nbin-alpine"
+	   PREBUILD_COMMAND=""
+	   BINARY_NAME="node-${NODE_VERSION}-${ARCH}"
+	   docker_build
+	   ;;
+	centos)
+	   CACHE_DIR=".ccache-centos"
+	   IMAGE="codercom/nbin-centos"
+	   PREBUILD_COMMAND="source /opt/rh/devtoolset-6/enable &&"
+	   BINARY_NAME="node-${NODE_VERSION}-${ARCH}"
+	   docker_build
+	   ;;
+	raspbian)
+	   CACHE_DIR=".ccache-raspbian"
+	   IMAGE="codercom/nbin-raspbian"
+	   PREBUILD_COMMAND=""
+	   BINARY_NAME="node-${NODE_VERSION}-${ARCH}"
+	   docker_build
+	   ;;
+	*)
+	  echo "Unsupported TARGET"
+	  exit 127
+	  ;;
+esac

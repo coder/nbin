@@ -20,17 +20,13 @@ matrix:
     env:
       - TARGET="alpine"
   - os: linux
-    arch: arm64
-    env:
-      - TARGET="alpine"
-  - os: linux
     arch: amd64
     env:
       - TARGET="centos"
   - os: linux
     arch: arm64
     env:
-      - TARGET="centos"
+      - TARGET="raspbian"
   - os: osx
 script: scripts/ci.sh
 deploy:
