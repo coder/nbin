@@ -132,7 +132,7 @@ export class Binary implements nbin.Binary {
 
 		if (fs.existsSync(nodeBinaryPath)) {
 			if (this.canLog) {
-				logger.info("Returning cached binary", field("binary-name", nodeBinaryName));
+				logger.info("Returning cached binary", field("binary-name", nodeBinaryPath));
 			}
 			return fs.readFileSync(nodeBinaryPath);
 		} else {
