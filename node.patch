@@ -1,138 +1,142 @@
-diff --git a/lib/internal/bootstrap/node.js b/lib/internal/bootstrap/node.js
-index 885546c5d6..f21e7993f1 100644
---- a/lib/internal/bootstrap/node.js
-+++ b/lib/internal/bootstrap/node.js
-@@ -215,11 +215,16 @@
-     // are running from a script and running the REPL - but there are a few
-     // others like the debugger or running --eval arguments. Here we decide
-     // which mode we run in.
-+
-+    if (NativeModule.exists('_third_party_main')) {
-+	  NativeModule.require('_third_party_main');
-+    }
-+
-     if (internalBinding('worker').getEnvMessagePort() !== undefined) {
-       // This means we are in a Worker context, and any script execution
-       // will be directed by the worker module.
-       NativeModule.require('internal/worker').setupChild(evalScript);
--    } else if (NativeModule.exists('_third_party_main')) {
-+    } else if (NativeModule.exists('_third_party_main_invalid')) {
-       // To allow people to extend Node in different ways, this hook allows
-       // one to drop a file lib/_third_party_main.js into the build
-       // directory which will be executed instead of Node's normal loading.
 diff --git a/lib/internal/modules/cjs/loader.js b/lib/internal/modules/cjs/loader.js
-index fb3770b729..f4bad8d6de 100644
+index 64505220ab..637bf82159 100644
 --- a/lib/internal/modules/cjs/loader.js
 +++ b/lib/internal/modules/cjs/loader.js
-@@ -44,6 +44,9 @@ const { getOptionValue } = require('internal/options');
- const preserveSymlinks = getOptionValue('--preserve-symlinks');
- const preserveSymlinksMain = getOptionValue('--preserve-symlinks-main');
- const experimentalModules = getOptionValue('--experimental-modules');
+@@ -63,6 +63,10 @@ const manifest = getOptionValue('--experimental-policy') ?
+   require('internal/process/policy').manifest :
+   null;
+ const { compileFunction } = internalBinding('contextify');
++// NOTE@coder: Modules used in our customizations below.
 +const nbin = require('nbin');
 +const os = require('os');
 +const zlib = require('zlib');
  
  const {
-   ERR_INVALID_ARG_TYPE,
-@@ -87,7 +90,8 @@ function stat(filename) {
-     const result = cache.get(filename);
+   ERR_INVALID_ARG_VALUE,
+@@ -118,7 +122,11 @@ function stat(filename) {
+     const result = statCache.get(filename);
      if (result !== undefined) return result;
    }
 -  const result = internalModuleStat(filename);
++  // NOTE@coder: Try loading from within the binary.
 +  const s = nbin.statSync(filename);
-+  const result = s.isDirectory ? 1 : s.isFile ? 0 : internalModuleStat(filename);
-   if (cache !== null) cache.set(filename, result);
++  const result = s.isDirectory ?
++    1 :
++    (s.isFile ? 0 : internalModuleStat(filename));
+   if (statCache !== null) statCache.set(filename, result);
    return result;
  }
-@@ -154,8 +158,13 @@ function readPackage(requestPath) {
-   if (entry)
-     return entry;
+@@ -224,7 +232,13 @@ function readPackage(requestPath) {
+   const existing = packageJsonCache.get(jsonPath);
+   if (existing !== undefined) return existing;
  
-+  let json;
-   const jsonPath = path.resolve(requestPath, 'package.json');
 -  const json = internalModuleReadJSON(path.toNamespacedPath(jsonPath));
++  // NOTE@coder: Try loading from the binary.
++  let json;
 +  if (nbin.existsSync(jsonPath)) {
 +    json = nbin.readFileSync(jsonPath, 'utf8');
 +  } else {
 +    json = internalModuleReadJSON(path.toNamespacedPath(jsonPath));
 +  }
- 
    if (json === undefined) {
+     packageJsonCache.set(jsonPath, false);
      return false;
-@@ -199,6 +208,9 @@ function tryFile(requestPath, isMain) {
+@@ -334,6 +348,10 @@ function tryFile(requestPath, isMain) {
  }
  
  function toRealPath(requestPath) {
++  // NOTE@coder: Try loading from the binary.
 +  if (nbin.existsSync(requestPath)) {
 +    return requestPath;
 +  }
    return fs.realpathSync(requestPath, {
      [internalFS.realpathCacheKey]: realpathCache
    });
-@@ -696,14 +708,29 @@ Module.prototype._compile = function(content, filename) {
- 
- // Native extension for .js
- Module._extensions['.js'] = function(module, filename) {
--  var content = fs.readFileSync(filename, 'utf8');
+@@ -991,14 +1009,32 @@ Module._extensions['.js'] = function(module, filename) {
+       }
+     }
+   }
+-  const content = fs.readFileSync(filename, 'utf8');
++  // NOTE@coder: Try loading from within the binary.
 +  let content;
 +  if (nbin.existsSync(filename)) {
 +    content = nbin.readFileSync(filename, 'utf8');
 +  } else {
 +    content = fs.readFileSync(filename, 'utf8');
 +  }
++  module._compile(stripBOM(content), filename);
++};
++
++// NOTE@coder: Native extension for .gz
++Module._extensions['.gz'] = function(module, filename) {
++  const content = zlib.gunzipSync(nbin.readFileSync(filename)).toString('utf8');
    module._compile(stripBOM(content), filename);
  };
  
-+// Native extension for .gz
-+Module._extensions['.gz'] = function(module, filename) {
-+  const content = zlib.gunzipSync(nbin.readFileSync(filename)).toString("utf8");
-+  module._compile(stripBOM(content), filename);
-+};
  
  // Native extension for .json
  Module._extensions['.json'] = function(module, filename) {
--  var content = fs.readFileSync(filename, 'utf8');
+-  const content = fs.readFileSync(filename, 'utf8');
++  // NOTE@coder: Try loading from within the binary.
 +  let content;
 +  if (nbin.existsSync(filename)) {
 +    content = nbin.readFileSync(filename, 'utf8');
 +  } else {
 +    content = fs.readFileSync(filename, 'utf8');
 +  }
-   try {
-     module.exports = JSON.parse(stripBOM(content));
-   } catch (err) {
-@@ -715,7 +742,16 @@ Module._extensions['.json'] = function(module, filename) {
  
+   if (manifest) {
+     const moduleURL = pathToFileURL(filename);
+@@ -1017,12 +1053,34 @@ Module._extensions['.json'] = function(module, filename) {
  // Native extension for .node
  Module._extensions['.node'] = function(module, filename) {
+   if (manifest) {
+-    const content = fs.readFileSync(filename);
++    // NOTE@coder: Try loading from within the binary.
++    let content;
++    if (nbin.existsSync(filename)) {
++      content = nbin.readFileSync(filename);
++    } else {
++      content = fs.readFileSync(filename);
++    }
+     const moduleURL = pathToFileURL(filename);
+     manifest.assertIntegrity(moduleURL, content);
+   }
+   // Be aware this doesn't use `content`
 -  return process.dlopen(module, path.toNamespacedPath(filename));
++  // NOTE@coder: Try extracting from the binary to a temporary directory.
 +  let isInternal = false;
 +  if (nbin.existsSync(filename)) {
-+    const tmpFile = path.join(os.tmpdir(), `.nbin${nbin.id}-${path.basename(filename)}`);
++    const tmpDir = path.join(os.tmpdir(), 'nbin', nbin.version);
++    const tmpFile = path.join(tmpDir, path.basename(filename));
 +    if (!fs.existsSync(tmpFile)) {
-+        fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
++      fs.mkdirSync(path.dirname(tmpDir));
++      fs.mkdirSync(tmpDir);
++      fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
 +    }
 +    filename = tmpFile;
 +    isInternal = true;
 +  }
-+  return process.dlopen(module, isInternal ? filename : path.toNamespacedPath(filename));
++  return process.dlopen(
++    module,
++    isInternal ? filename : path.toNamespacedPath(filename)
++  );
  };
  
- if (experimentalModules) {
+ Module._extensions['.mjs'] = function(module, filename) {
 diff --git a/src/node.cc b/src/node.cc
-index 9fb5ab3b8e..d2c9ab3bc3 100644
+index ae53d0c31c..76e4b9cf66 100644
 --- a/src/node.cc
 +++ b/src/node.cc
-@@ -2439,6 +2439,12 @@ void ProcessArgv(std::vector<std::string>* args,
+@@ -663,6 +663,11 @@ int ProcessGlobalArgs(std::vector<std::string>* args,
+   // Parse a few arguments which are specific to Node.
    std::vector<std::string> v8_args;
-   std::vector<std::string> errors{};
  
++  // NOTE@coder: If we aren't bypassing nbin, don't process the arguments.
 +  if (!getenv("NBIN_BYPASS") && !is_env) {
-+    // *exec_argc = 0;
-+
-+    return;
++    return 0;
 +  }
 +
-   {
-     // TODO(addaleax): The mutex here should ideally be held during the
-     // entire function, but that doesn't play well with the exit() calls below.
+   Mutex::ScopedLock lock(per_process::cli_options_mutex);
+   options_parser::Parse(
+       args,

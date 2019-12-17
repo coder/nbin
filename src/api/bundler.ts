@@ -170,7 +170,7 @@ export class Binary implements nbin.Binary {
 		if (currentArchitecture === "x64") {
 			currentArchitecture = "x86_64";
 		}
-		const nodeVersion = "10.15.1";
+		const nodeVersion = "12.13.1";
 		const packageJson = require("../../package.json");
 		const packageVersion = packageJson.version;
 		const binName = `${packageVersion}/node-${nodeVersion}-${currentPlatform}-${currentArchitecture}`;
