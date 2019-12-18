@@ -74,3 +74,18 @@ NODE_OPTIONS="--inspect-brk" ./path/to/bin
 ```
 
 Gzip'd JavaScript files are supported to reduce bundle size.
+
+## Development
+
+```
+yarn
+yarn build
+```
+
+### Patching
+
+We patch Node to make it capable of reading files within the binary.
+
+To generate a new patch, **stage all the changes** you want to be included in
+the patch in the Node source, then run `yarn patch:generate` in this
+directory.

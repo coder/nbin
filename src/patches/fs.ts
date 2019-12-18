@@ -1,350 +1,394 @@
 /**
  * A patch for `fs` permitting certain directories to be routed within the binary.
  */
-import * as fs from "fs";
-import * as nbin from "nbin";
-import * as path from "path";
-import * as util from "util";
+import * as fs from "fs"
+import * as nbin from "nbin"
+import * as path from "path"
+import * as util from "util"
+import { createNotFound } from "../common/error"
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
+interface OpenFile {
+  readonly path: fs.PathLike
+  readLocation: number
+}
 
 /**
  * Fills `${pathName}/*` with the binary stuff.
  */
 export const fillFs = (pathName: string): void => {
-	const override = <T extends keyof typeof fs>(propertyName: T, callback: (callOld: () => any) => typeof fs[T], customPromisify?: (...args: any[]) => Promise<any>) => {
-		const oldfunc = fs[propertyName];
-		/**
-		 * Overridding the FS func
-		 */
-		fs[propertyName] = (...args: any[]): any => {
-			const callOld = (): any => {
-				// @ts-ignore
-				return oldfunc(...args);
-			};
+  const openFiles = new Map<number, OpenFile>()
+  const override = <T extends keyof typeof fs>(
+    propertyName: T,
+    callback: (callOld: () => any) => Omit<typeof fs[T], "__promisify__" | "native">,
+    customPromisify?: (...args: any[]) => Promise<any>
+  ): void => {
+    const oldfunc = ((fs as any)[propertyName](
+      /**
+       * Overridding the FS func
+       */
+      fs as any
+    )[propertyName] = (...args: any[]): any => {
+      const callOld = (): any => {
+        return (oldfunc as any)(...args)
+      }
 
-			let realPath = args[0];
+      let realPath = args[0]
 
-			/**
-			 * If this is a number, its likely a file descriptor
-			 */
-			if (typeof realPath === "number") {
-				const newFd = args[0];
-				if (openFiles.has(newFd)) {
-					realPath = openFiles.get(newFd).path;
-				}
-			}
+      /**
+       * If this is a number, its likely a file descriptor
+       */
+      if (typeof realPath === "number") {
+        const newFd = args[0]
+        const maybeRealPath = openFiles.get(newFd)
+        if (maybeRealPath) {
+          realPath = maybeRealPath
+        }
+      }
 
-			/**
-			 * If this is a string, its likely a filepath
-			 */
-			if (typeof realPath === "string") {
-				const newPath = realPath;
-				const rel = path.relative(pathName, newPath!);
-				if (!rel.startsWith("..")) {
-					// It's in the fill path
-					// Do stuff here w/ the rest of the args
+      /**
+       * If this is a string, its likely a filepath
+       */
+      if (typeof realPath === "string") {
+        const newPath = realPath
+        const rel = path.relative(pathName, newPath!)
+        if (!rel.startsWith("..")) {
+          // It's in the fill path
+          // Do stuff here w/ the rest of the args
 
-					const func = callback(() => callOld());
+          const func = callback(() => callOld())
+          return (func as any)(...args)
+        }
+      }
 
-					// @ts-ignore
-					return func(...args);
-				}
-			}
+      return callOld()
+    })
 
-			return callOld();
-		};
+    if (customPromisify) {
+      ;(fs as any)[propertyName][util.promisify.custom] = customPromisify
+    }
+  }
 
-		if (customPromisify) {
-			fs[propertyName][util.promisify.custom] = customPromisify;
-		}
-	};
+  let fdId = 0
+  const findCb = (args: any[]): undefined | ((...args: any[]) => void) => {
+    const cb = args.filter((d) => {
+      return typeof d === "function"
+    })
+    if (cb.length === 0) {
+      return
+    }
+    return cb[0]
+  }
 
-	let fdId = 0;
-	interface OpenFile {
-		readonly path: string;
-		readLocation: number;
-	}
-	const openFiles = new Map<number, OpenFile>();
-	const findCb = (args: any[]): undefined | ((...args: any[]) => void) => {
-		const cb = args.filter((d) => {
-			return typeof d === "function";
-		});
-		if (cb.length === 0) {
-			return;
-		}
-		return cb[0];
-	};
+  override("access", (callOld) => (pathName: fs.PathLike): void => {
+    if (!nbin.existsSync(pathName)) {
+      return callOld()
+    }
+  })
 
-	// @ts-ignore
-	override("access", (callOld) => (pathName: string) => {
-		if (!nbin.existsSync(pathName)) {
-			return callOld();
-		}
-	});
+  override("accessSync", (callOld) => (pathName: fs.PathLike): void => {
+    if (!nbin.existsSync(pathName)) {
+      return callOld()
+    }
+  })
 
-	override("accessSync", (callOld) => (pathName: string) => {
-		if (!nbin.existsSync(pathName)) {
-			return callOld();
-		}
-	});
+  override("close", (callOld) => (fd: number, callback: Function): void => {
+    if (!openFiles.has(fd)) {
+      return callOld()
+    }
 
-	// @ts-ignore
-	override("close", (callOld) => (fd, callback) => {
-		if (!openFiles.has(fd)) {
-			return callOld();
-		}
+    openFiles.delete(fd)
+    callback(null)
+  })
 
-		openFiles.delete(fd);
-		callback(null);
-	});
+  override("closeSync", (callOld) => (fd: number): void => {
+    if (!openFiles.has(fd)) {
+      return callOld()
+    }
 
-	override("closeSync", (callOld) => (fd) => {
-		if (!openFiles.has(fd)) {
-			return callOld();
-		}
+    openFiles.delete(fd)
+  })
 
-		openFiles.delete(fd);
-	});
+  override(
+    "exists",
+    () => (pathName: fs.PathLike, callback: Function): void => {
+      callback(nbin.existsSync(pathName))
+    },
+    (pathName: fs.PathLike): Promise<boolean> => {
+      return new Promise((resolve) => {
+        return fs.exists(pathName, (exists) => {
+          resolve(exists)
+        })
+      })
+    }
+  )
 
-	// @ts-ignore
-	override("exists", (callOld) => (pathName: string, callback) => {
-		callback(nbin.existsSync(pathName));
-	}, (pathName: string) => {
-		return new Promise((resolve, reject) => {
-			return fs.exists(pathName, (exists) => {
-				resolve(exists);
-			});
-		});
-	});
+  override("existsSync", () => (pathName: fs.PathLike): boolean => {
+    return nbin.existsSync(pathName)
+  })
 
-	override("existsSync", (callOld) => (pathName: string) => {
-		return nbin.existsSync(pathName);
-	});
+  override(
+    "fstat",
+    (callOld) => (fd: number, callback: (err: NodeJS.ErrnoException | null, stats: fs.Stats) => void): void => {
+      if (!openFiles.has(fd)) {
+        return callOld()
+      }
 
-	// @ts-ignore
-	override("fstat", (callOld) => (fd, callback) => {
-		if (!openFiles.has(fd)) {
-			return callOld();
-		}
+      const openFile = openFiles.get(fd)
+      if (!openFile) {
+        return callback(createNotFound(), null!)
+      }
+      return fs.stat(openFile.path, callback)
+    }
+  )
 
-		const openFile = openFiles.get(fd);
-		return fs.stat(openFile.path, callback);
-	});
+  override("fstatSync", (callOld) => (fd: number): fs.Stats => {
+    if (!openFiles.has(fd)) {
+      return callOld()
+    }
 
-	override("fstatSync", (callOld) => (fd) => {
-		if (!openFiles.has(fd)) {
-			return callOld();
-		}
+    const openFile = openFiles.get(fd)
+    if (!openFile) {
+      throw createNotFound()
+    }
+    return fs.statSync(openFile.path)
+  })
 
-		const openFile = openFiles.get(fd);
-		return fs.statSync(openFile.path);
-	});
+  override(
+    "lstat",
+    () => (pathName: fs.PathLike, callback: (err: NodeJS.ErrnoException | null, stats: fs.Stats) => void): void => {
+      return fs.stat(pathName, callback)
+    }
+  )
 
-	// @ts-ignore
-	override("lstat", (callOld) => (pathName, callback) => {
-		return fs.stat(pathName, callback);
-	});
+  override("lstatSync", () => (pathName: fs.PathLike): fs.Stats => {
+    return fs.statSync(pathName)
+  })
 
-	override("lstatSync", (callOld) => (pathName) => {
-		return fs.statSync(pathName);
-	});
+  const doOpen = (pathName: fs.PathLike): number => {
+    const desc = fdId++
+    openFiles.set(desc, {
+      path: pathName,
+      readLocation: 0,
+    })
+    return desc
+  }
 
-	const doOpen = (pathName: string): number => {
-		const desc = fdId++;
-		openFiles.set(desc, {
-			path: pathName,
-			readLocation: 0,
-		});
-		return desc;
-	};
+  override("open", (callOld) => (pathName: fs.PathLike, ...args: any[]): void => {
+    if (!nbin.existsSync(pathName)) {
+      return callOld()
+    }
+    const fd = doOpen(pathName)
+    const cb = findCb(args)
+    if (!cb) {
+      return
+    }
+    process.nextTick(() => {
+      cb(null, fd)
+    })
+  })
 
-	// @ts-ignore
-	override("open", (callOld) => (pathName: string, ...args: any[]) => {
-		if (!nbin.existsSync(pathName)) {
-			return callOld();
-		}
-		const fd = doOpen(pathName);
-		const cb = findCb(args);
-		if (!cb) {
-			return;
-		}
-		process.nextTick(() => {
-			cb(null, fd);
-		});
-	});
+  override("openSync", (callOld) => (pathName: fs.PathLike): number => {
+    if (!nbin.existsSync(pathName)) {
+      return callOld()
+    }
+    return doOpen(pathName)
+  })
 
-	override("openSync", (callOld) => (pathName: string) => {
-		if (!nbin.existsSync(pathName)) {
-			return callOld();
-		}
-		return doOpen(pathName);
-	});
+  override(
+    "read",
+    (callOld) => (
+      fd: number,
+      buffer: Buffer,
+      offset: number,
+      length: number,
+      position: number,
+      callback: Function
+    ): void => {
+      const openFile = openFiles.get(fd)
+      if (!openFile) {
+        return callOld()
+      }
 
-	// @ts-ignore
-	override("read", (callOld) => (fd, buffer: Buffer, offset, length, position, callback) => {
-		const openFile = openFiles.get(fd);
-		if (!openFile) {
-			return callOld();
-		}
+      let hadPosition = true
+      if (typeof position === "undefined" || position === null) {
+        position = openFile.readLocation
+        hadPosition = false
+      }
+      nbin
+        .readFile(openFile.path, "buffer", position, length)
+        .then((content) => {
+          buffer.set(content, offset)
+          if (!hadPosition) {
+            openFile.readLocation += content.byteLength
+          }
+          // tslint:disable-next-line:no-any
+          callback(null, content.byteLength, content as any)
+        })
+        .catch((ex) => {
+          callback(ex, null, null)
+        })
+    },
+    (fd, buffer: Buffer, offset, length, position) => {
+      return new Promise((resolve, reject) => {
+        return fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+          if (err) {
+            return reject(err)
+          }
 
-		let hadPosition = true;
-		if (typeof position === "undefined" || position === null) {
-			position = openFile.readLocation;
-			hadPosition = false;
-		}
-		nbin.readFile(openFile.path, "buffer", position, length).then((content) => {
-			buffer.set(content, offset);
-			if (!hadPosition) {
-				openFile.readLocation += content.byteLength;
-			}
-			// tslint:disable-next-line:no-any
-			callback(null, content.byteLength, content as any);
-		}).catch((ex) => {
-			callback(ex, null, null);
-		});
-	}, (fd, buffer: Buffer, offset, length, position) => {
-		return new Promise((resolve, reject) => {
-			return fs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
-				if (err) {
-					return reject(err);
-				}
+          resolve({
+            bytesRead,
+            buffer,
+          })
+        })
+      })
+    }
+  )
 
-				resolve({
-					bytesRead,
-					buffer,
-				});
-			});
-		});
-	});
+  override(
+    "readSync",
+    (callOld) => (fd: number, buffer: Buffer, offset: number, length: number, position: number): number => {
+      const openFile = openFiles.get(fd)
+      if (!openFile) {
+        return callOld()
+      }
 
-	override("readSync", (callOld) => (fd, buffer: Buffer, offset, length, position): number => {
-		const openFile = openFiles.get(fd);
-		if (!openFile) {
-			return callOld();
-		}
+      let hadPosition = true
+      if (typeof position === "undefined" || position === null) {
+        position = openFile.readLocation
+        hadPosition = false
+      }
+      const content = nbin.readFileSync(openFile.path, "buffer", position, length)
+      buffer.set(content, offset)
+      if (!hadPosition) {
+        openFile.readLocation += content.byteLength
+      }
+      return content.byteLength
+    }
+  )
 
-		let hadPosition = true;
-		if (typeof position === "undefined" || position === null) {
-			position = openFile.readLocation;
-			hadPosition = false;
-		}
-		const content = nbin.readFileSync(openFile.path, "buffer", position, length);
-		buffer.set(content, offset);
-		if (!hadPosition) {
-			openFile.readLocation += content.byteLength;
-		}
-		return content.byteLength;
-	});
+  override("readdir", () => (pathName: fs.PathLike, ...args: any[]): void => {
+    const cb = findCb(args)
+    if (!cb) {
+      return
+    }
+    cb(null, nbin.readdirSync(pathName))
+  })
 
-	// @ts-ignore
-	override("readdir", (callOld) => (pathName: string, ...args: any[]) => {
-		const cb = findCb(args);
-		if (!cb) {
-			return;
-		}
-		cb(null, nbin.readdirSync(pathName));
-	});
+  override("readdirSync", () => (pathName: string): string[] => {
+    return [...nbin.readdirSync(pathName)]
+  })
 
-	// @ts-ignore
-	override("readdirSync", (callOld) => (pathName: string) => {
-		return [...nbin.readdirSync(pathName)];
-	});
+  override("readFile", () => (pathName: string, ...args: any[]): void => {
+    let encoding = "buffer"
+    if (typeof args[0] === "string") {
+      encoding = args[0]
+    }
+    if (typeof args[0] === "object" && args[0] !== null) {
+      const opts = args[0]
+      if (opts.encoding) {
+        encoding = opts.encoding
+      }
+    }
+    const cb = findCb(args)
+    if (!cb) {
+      return
+    }
+    nbin
+      .readFile(pathName, encoding as "utf8")
+      .then((result) => {
+        cb(null, result)
+      })
+      .catch((ex) => {
+        cb(ex)
+      })
+  })
 
-	// @ts-ignore
-	override("readFile", (callOld) => (pathName: string, ...args: any[]) => {
-		let encoding: "utf8" | "buffer" = "buffer";
-		if (typeof args[0] === "string") {
-			encoding = args[0];
-		}
-		if (typeof args[0] === "object" && args[0] !== null) {
-			const opts = args[0];
-			if (opts.encoding) {
-				encoding = opts.encoding;
-			}
-		}
-		const cb = findCb(args);
-		if (!cb) {
-			return;
-		}
-		nbin.readFile(pathName, encoding as "utf8").then((result) => {
-			cb(null, result);
-		}).catch((ex) => {
-			cb(ex);
-		});
-	});
+  override("readFileSync", () => (pathName: string, ...args: any[]): string | Buffer => {
+    let encoding = "buffer"
+    if (typeof args[0] === "string") {
+      encoding = args[0]
+    }
+    if (typeof args[0] === "object" && args[0] !== null) {
+      const opts = args[0]
+      if (opts.encoding) {
+        encoding = opts.encoding
+      }
+    }
+    return nbin.readFileSync(pathName, encoding as "buffer")
+  })
 
-	// @ts-ignore
-	override("readFileSync", (callOld) => (pathName: string, ...args: any[]) => {
-		let encoding: "utf8" | "buffer" = "buffer";
-		if (typeof args[0] === "string") {
-			encoding = args[0];
-		}
-		if (typeof args[0] === "object" && args[0] !== null) {
-			const opts = args[0];
-			if (opts.encoding) {
-				encoding = opts.encoding;
-			}
-		}
-		return nbin.readFileSync(pathName, encoding as "buffer");
-	});
+  override("realpath", () => (pathName: fs.PathLike, ...args: any[]): void => {
+    const cb = findCb(args)
+    if (!cb) {
+      return
+    }
+    cb(null, pathName)
+  })
 
-	// @ts-ignore
-	override("realpath", (callOld) => (pathName: string, ...args: any[]) => {
-		const cb = findCb(args);
-		if (!cb) {
-			return;
-		}
-		cb(null, pathName);
-	});
+  override("realpathSync", () => (pathName: fs.PathLike): fs.PathLike => {
+    return pathName
+  })
 
-	// @ts-ignore
-	override("realpathSync", (callOld) => (pathName: string) => {
-		return pathName;
-	});
+  const doStat = (pathName: fs.PathLike): fs.Stats => {
+    const stat = nbin.statSync(pathName)
+    const date = new Date()
 
-	const doStat = (pathName: string): fs.Stats => {
-		const stat = nbin.statSync(pathName);
-		const date = new Date();
+    return new (class {
+      isBlockDevice(): false {
+        return false
+      }
+      isCharacterDevice(): false {
+        return false
+      }
+      isDirectory(): boolean {
+        return stat.isDirectory
+      }
+      isFIFO(): false {
+        return false
+      }
+      isFile(): boolean {
+        return stat.isFile
+      }
+      isSocket(): false {
+        return false
+      }
+      isSymbolicLink(): false {
+        return false
+      }
 
-		return new class {
-			isBlockDevice() { return false; }
-			isCharacterDevice() { return false; }
-			isDirectory() { return stat.isDirectory; }
-			isFIFO() { return false; }
-			isFile() { return stat.isFile; }
-			isSocket() { return false; }
-			isSymbolicLink() { return false; }
+      public readonly atime = date
+      public readonly atimeMs = date.getTime()
+      public readonly birthtime = date
+      public readonly birthtimeMs = date.getTime()
+      public readonly blksize = null!
+      public readonly blocks = null!
+      public readonly ctime = date
+      public readonly ctimeMs = date.getTime()
+      public readonly dev = null!
+      public readonly gid = 0
+      public readonly ino = 0
+      public readonly mode = null!
+      public readonly mtime = date
+      public readonly mtimeMs = date.getTime()
+      public readonly nlink = null!
+      public readonly rdev = null!
+      public readonly size = stat.size
+      public readonly uid = 0
+    })()
+  }
 
-			public readonly atime = date;
-			public readonly atimeMs = date.getTime();
-			public readonly birthtime = date;
-			public readonly birthtimeMs = date.getTime();
-			public readonly blksize = null!;
-			public readonly blocks = null!;
-			public readonly ctime = date;
-			public readonly ctimeMs = date.getTime();
-			public readonly dev = null!;
-			public readonly gid = 0;
-			public readonly ino = 0;
-			public readonly mode = null!;
-			public readonly mtime = date;
-			public readonly mtimeMs = date.getTime();
-			public readonly nlink = null!;
-			public readonly rdev = null!;
-			public readonly size = stat.size;
-			public readonly uid = 0;
-		};
-	};
+  override("stat", () => (pathName: fs.PathLike, ...args: any[]): void => {
+    const cb = findCb(args)
+    if (!cb) {
+      return
+    }
+    cb(null, doStat(pathName))
+  })
 
-	// @ts-ignore
-	override("stat", (callOld) => (pathName: string, ...args: any[]) => {
-		const cb = findCb(args);
-		if (!cb) {
-			return;
-		}
-		cb(null, doStat(pathName));
-	});
-
-	override("statSync", (callOld) => (pathName: string) => {
-		return doStat(pathName);
-	});
-};
+  override("statSync", () => (pathName: fs.PathLike): fs.Stats => {
+    return doStat(pathName)
+  })
+}

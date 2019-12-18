@@ -1,7 +1,22 @@
 {
-	"compilerOptions": {
-		"target": "es6",
-		"module": "commonjs",
-		"outDir": "out"
-	}
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "out",
+    "declaration": true,
+    "sourceMap": true,
+    "typeRoots": ["./node_modules/@types", "./typings"],
+    "baseUrl": ".",
+    "paths": {
+      "nbin": ["./typings/nbin/index.d.ts"],
+      "@coder/nbin": ["./typings/nbin/index.d.ts"]
+    }
+  },
+  "include": [
+    "./src"
+  ]
 }

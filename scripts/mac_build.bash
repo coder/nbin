@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# mac_build.bash
 
 cd "$(dirname "$0")"
 source ./vars.sh

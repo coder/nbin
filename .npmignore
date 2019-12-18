@@ -6,9 +6,9 @@ yarn-error.log
 node_modules
 scripts
 src
+test
 node.patch
 tsconfig.json
-webpack.config.js
 yarn.lock
 example
 build
