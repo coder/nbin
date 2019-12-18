@@ -15,7 +15,7 @@
     "patch:generate": "cd ./lib/node && git diff HEAD > ../../scripts/node.patch",
     "patch:apply": "cd ./lib/node && git apply ../../scripts/node.patch"
   },
-  "typings": "typings/nbin/index.d.ts",
+  "typings": "typings/nbin.d.ts",
   "author": "Coder",
   "license": "MIT",
   "devDependencies": {

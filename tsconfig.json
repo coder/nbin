@@ -9,11 +9,10 @@
     "outDir": "out",
     "declaration": true,
     "sourceMap": true,
-    "typeRoots": ["./node_modules/@types", "./typings"],
     "baseUrl": ".",
     "paths": {
-      "nbin": ["./typings/nbin/index.d.ts"],
-      "@coder/nbin": ["./typings/nbin/index.d.ts"]
+      "nbin": ["./typings/internal.d.ts"],
+      "@coder/nbin": ["./typings/external.d.ts"]
     }
   },
   "include": [
