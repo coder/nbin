@@ -1,162 +1,144 @@
 import * as assert from "assert"
 import * as cp from "child_process"
-import * as fs from "fs"
+import * as fs from "fs-extra"
 import * as os from "os"
 import * as path from "path"
+import * as util from "util"
 import * as zlib from "zlib"
 import { Binary } from "../src/api/bundler"
 
-const nodePath = path.join(__dirname, "../lib/node/out/Release/node")
-if (!fs.existsSync(nodePath)) {
-  throw new Error("Node must be built locally to run bundler test")
-}
+// Add a default for the maximum memory.
+process.env.NODE_OPTIONS = `--max-old-space-size=1024 ${process.env.NODE_OPTIONS || ""}`
+
 let binId = 0
-const runBinary = async (binary: Binary): Promise<cp.SpawnSyncReturns<Buffer>> => {
-  const tmpFile = path.join(os.tmpdir(), ".nbin-bundlertest" + binId++)
-  fs.writeFileSync(tmpFile, await binary.build())
-  fs.chmodSync(tmpFile, "755")
-  return cp.spawnSync(tmpFile, {
-    env: {
-      NODE_OPTIONS: "--max-old-space-size=1024",
-    },
-  })
+const nodePath = path.join(__dirname, "../lib/node/node")
+const tmpDir = path.join(os.tmpdir(), "nbin/tests")
+const runBinary = async (
+  binary: Binary,
+  expected?: { stdout?: string; stderr?: string }
+): Promise<{ stdout: string; stderr: string }> => {
+  const tmpFile = path.join(tmpDir, `${binId++}`)
+  await fs.writeFile(tmpFile, await binary.build())
+  await fs.chmod(tmpFile, "755")
+  const output = await util.promisify(cp.exec)(tmpFile)
+  assert.equal(output.stderr, (expected && expected.stderr) || "")
+  assert.equal(output.stdout, (expected && expected.stdout) || "")
+  return output
 }
 
-it("should compile binary and execute it", async () => {
-  const mainFile = "/example.js"
-  const bin = new Binary({
-    nodePath,
-    mainFile,
+describe("bundler", () => {
+  before(async () => {
+    assert.equal(fs.existsSync(nodePath), true, "Node must be built locally to run bundler tests")
+    await fs.mkdirp(tmpDir)
   })
-  const output = "hello!"
-  bin.writeFile(mainFile, Buffer.from(`console.log("${output}");`))
-  const resp = await runBinary(bin)
-  assert.equal(resp.stdout.toString().trim(), output)
-})
 
-/**
- * TODO: this should work on other platforms
- */
-if (process.platform === "linux") {
-  it("should load native module", async () => {
+  it("should error if running raw binary", async () => {
+    assert.rejects(async () => {
+      await util.promisify(cp.exec)(nodePath)
+    }, /ERR_BUFFER_OUT_OF_BOUNDS/)
+  })
+
+  it("should compile binary and execute it", async () => {
     const mainFile = "/example.js"
-    const bin = new Binary({
-      nodePath,
-      mainFile,
+    const bin = new Binary({ nodePath, mainFile })
+    const stdout = "hello!"
+    bin.writeFile(mainFile, `console.log("${stdout}");`)
+    await runBinary(bin, { stdout })
+  })
+
+  /**
+   * TODO: this should work on other platforms
+   */
+  if (process.platform === "linux") {
+    it("should load native module", async () => {
+      const mainFile = "/example.js"
+      const bin = new Binary({ nodePath, mainFile })
+      const stdout = "hi"
+      bin.writeModule(path.join(__dirname, "../node_modules", "node-pty"))
+      bin.writeFile(mainFile, `require("node-pty");console.log("${stdout}");`)
+      await runBinary(bin, { stdout })
     })
-    bin.writeModule(path.join(__dirname, "../../node_modules", "node-pty"))
-    bin.writeFile(mainFile, Buffer.from(`require("node-pty");console.log("hi");`))
-    const resp = await runBinary(bin)
-    const stderr = resp.stderr.toString().trim()
-    if (stderr.length > 0) {
-      console.error(stderr)
+  }
+
+  it("should fork", async () => {
+    const mainFile = "/example.js"
+    const bin = new Binary({ nodePath, mainFile })
+
+    const exampleContent = (): void => {
+      process.env.NBIN_BYPASS = "true"
+      const proc = require("child_process").fork("/test.js", [], {
+        stdio: [null, null, null, "ipc"],
+      })
+      proc.stdout.on("data", (d: Buffer) => {
+        console.log(d.toString("utf8"))
+        setTimeout(() => process.exit(0), 10000)
+      })
     }
-    assert.equal(stderr.length, 0)
-  })
-}
 
-it("should fork", async () => {
-  const mainFile = "/example.js"
-  const bin = new Binary({
-    nodePath,
-    mainFile,
+    const stdout = "hi"
+    bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
+    bin.writeFile("/test.js", `console.log("${stdout}");`)
+    await runBinary(bin, { stdout })
   })
-  bin.writeFile(
-    mainFile,
-    Buffer.from(`
-    process.env.NBIN_BYPASS = true;
-    const proc = require("child_process").fork("/test.js", [], {
-      stdio: [null, null, null, "ipc"]
-    });
-    proc.stdout.on("data", (d) => {
-      console.log(d.toString("utf8"));
-      setTimeout(() => process.exit(0), 10000);
-    });
-  `)
-  )
-  bin.writeFile("/test.js", Buffer.from("console.log('hi');"))
-  const resp = await runBinary(bin)
-  assert.equal(resp.stdout.toString().trim(), "hi")
-})
 
-/**
- * TODO: this should work on other platforms
- */
-if (process.platform === "linux") {
-  it("should fill fs", async () => {
+  /**
+   * TODO: this should work on other platforms
+   */
+  if (process.platform === "linux") {
+    it("should fill fs", async () => {
+      const mainFile = "/example.js"
+      const exampleContent = (): void => {
+        const assert = require("assert") as typeof import("assert")
+        const fs = require("fs") as typeof import("fs")
+        const nbin = require("nbin") as typeof import("nbin")
+
+        try {
+          fs.readFileSync("/donkey/frog")
+          process.exit(1) // Fail if we read successfully.
+        } catch (ex) {
+          nbin.shimNativeFs("/donkey")
+          assert.equal(fs.readFileSync("/donkey/frog").toString(), "example")
+          try {
+            fs.writeFileSync("/donkey/banana", "asdf")
+            process.exit(1)
+          } catch (ex) {
+            console.log("success")
+          }
+        }
+      }
+      const bin = new Binary({ nodePath, mainFile })
+      bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
+      bin.writeFile("/donkey/frog", "example")
+      await runBinary(bin, { stdout: "success" })
+    })
+  }
+
+  it("should fill fs and propogate errors", async () => {
     const mainFile = "/example.js"
     const exampleContent = (): void => {
-      const assert = require("assert") as typeof import("assert")
       const fs = require("fs") as typeof import("fs")
       const nbin = require("nbin") as typeof import("nbin")
 
-      try {
-        fs.readFileSync("/donkey/frog")
-        // Fail if we read successfully
-        process.exit(1)
-      } catch (ex) {
-        nbin.shimNativeFs("/donkey")
-        assert.equal(fs.readFileSync("/donkey/frog").toString(), "example")
-        try {
-          fs.writeFileSync("/donkey/banana", "asdf")
-          process.exit(1)
-        } catch (ex) {
-          // Expected
+      nbin.shimNativeFs("/home/kyle/node/coder/code-server/packages/server")
+      fs.open("/home/kyle/node/coder/code-server/packages/server/build/web/auth/__webpack_hmr", "r", (err) => {
+        if (err) {
+          console.log("success")
+          process.exit(0)
         }
-      }
+
+        process.exit(1)
+      })
     }
-    const bin = new Binary({
-      nodePath,
-      mainFile,
-    })
-    bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`))
-    bin.writeFile("/donkey/frog", Buffer.from("example"))
-    const resp = await runBinary(bin)
-    if (resp.stdout.length > 0) {
-      console.log(resp.stdout.toString())
-    }
-    assert.equal(resp.stderr.toString().trim(), "")
+    const bin = new Binary({ nodePath, mainFile })
+    bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
+    await runBinary(bin, { stdout: "success" })
   })
-}
 
-it("should fill fs and propogate errors", async () => {
-  const mainFile = "/example.js"
-  const exampleContent = (): void => {
-    const fs = require("fs") as typeof import("fs")
-    const nbin = require("nbin") as typeof import("nbin")
-
-    nbin.shimNativeFs("/home/kyle/node/coder/code-server/packages/server")
-    fs.open("/home/kyle/node/coder/code-server/packages/server/build/web/auth/__webpack_hmr", "r", (err) => {
-      if (err) {
-        // Expected
-        process.exit(0)
-      }
-
-      process.exit(1)
-    })
-  }
-  const bin = new Binary({
-    nodePath,
-    mainFile,
+  it("should load gzip'd javascript", async () => {
+    const mainFile = "/example.js.gz"
+    const bin = new Binary({ nodePath, mainFile })
+    const stdout = "success"
+    bin.writeFile(mainFile, zlib.gzipSync(Buffer.from(`console.log("${stdout}");process.exit(0);`)))
+    await runBinary(bin, { stdout })
   })
-  bin.writeFile(mainFile, Buffer.from(`(${exampleContent.toString()})()`))
-  const resp = await runBinary(bin)
-  if (resp.stderr.length > 0) {
-    console.log(resp.stderr.toString())
-  }
-  assert.equal(resp.stderr.toString().trim().length, 0)
-})
-
-it("should load gzip'd javascript", async () => {
-  const mainFile = "/example.js.gz"
-  const bin = new Binary({
-    nodePath,
-    mainFile,
-  })
-  bin.writeFile(mainFile, zlib.gzipSync(Buffer.from("process.exit(0);")))
-  const resp = await runBinary(bin)
-  if (resp.stderr.length > 0) {
-    console.log(resp.stderr.toString())
-  }
-  assert.equal(resp.stderr.toString().trim().length, 0)
 })
