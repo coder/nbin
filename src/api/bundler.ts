@@ -1,4 +1,4 @@
-import { field, logger } from "@coder/logger"
+import { field, logger, Level } from "@coder/logger"
 import * as nbin from "@coder/nbin"
 import * as fs from "fs-extra"
 import * as glob from "glob"
@@ -35,9 +35,10 @@ export class Binary implements nbin.Binary {
     const files = glob.sync(globName, { cwd: process.cwd() })
     let fileCount = 0
     let spinner: ora.Ora | undefined
-    if (this.canLog) {
+    if (logger.level <= Level.Info) {
       spinner = ora("Writing...")
     }
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       const stat = fs.statSync(file)
@@ -51,11 +52,13 @@ export class Binary implements nbin.Binary {
       if (callback) {
         callback(file)
       }
-      fileCount++
+      ++fileCount
     }
+
     if (spinner) {
       spinner.succeed(`Wrote ${fileCount} ${fileCount === 1 ? "file" : "files"}!`)
     }
+
     return fileCount
   }
 
@@ -75,9 +78,7 @@ export class Binary implements nbin.Binary {
       }
       this.writeFile(newPath, fs.readFileSync(p))
     }
-    if (this.canLog) {
-      logger.info("Packaged module", field("module", moduleName))
-    }
+    logger.trace("Packaged module", field("module", moduleName))
   }
 
   public async build(): Promise<Buffer> {
@@ -92,9 +93,8 @@ export class Binary implements nbin.Binary {
     const mainFileBuffer = Buffer.alloc(2 + Buffer.byteLength(this.options.mainFile))
     writeString(mainFileBuffer, this.options.mainFile)
 
-    if (this.canLog) {
-      logger.info("Building filesystem")
-    }
+    logger.trace("Building filesystem")
+
     // Filesystem contents
     const fsBuffer = this.fs.build()
 
@@ -141,30 +141,23 @@ export class Binary implements nbin.Binary {
 
     // See if we already have the binary.
     if (await fs.pathExists(nodeBinaryPath)) {
-      if (this.canLog) {
-        logger.info("Returning cached binary", field("binary-name", nodeBinaryName))
-      }
+      logger.trace("Returning cached binary", field("path", nodeBinaryPath))
       return fs.readFile(nodeBinaryPath)
     }
 
     // The binary we need doesn't exist, fetch it.
-    const binary = await this.fetchNodeBinary()
+    const binary = await this.fetchNodeBinary(nodeBinaryName)
     await fs.mkdirp(path.dirname(nodeBinaryPath))
     await fs.writeFile(nodeBinaryPath, binary)
 
-    if (this.canLog) {
-      logger.info("Wrote and cached binary", field("binary-name", nodeBinaryName), field("path", nodeBinaryPath))
-    }
+    logger.trace("Returning written binary", field("path", nodeBinaryPath))
 
     return binary
   }
 
-  private async fetchNodeBinary(): Promise<Buffer> {
-    const binName = this.nodeBinaryName
+  private async fetchNodeBinary(binName: string): Promise<Buffer> {
     const url = `https://nbin.cdr.sh/${binName}`
-    if (this.canLog) {
-      logger.info("Fetching", field("url", url))
-    }
+    logger.trace("Fetching", field("url", url))
 
     const resp = await fetch(url)
     if (resp.status !== 200) {
@@ -185,10 +178,6 @@ export class Binary implements nbin.Binary {
     const binName = `${this.version}/node-${nodeVersion}-${currentPlatform}-${currentArchitecture}`
 
     return binName
-  }
-
-  private get canLog(): boolean {
-    return !this.options.suppressOutput
   }
 
   private get version(): string {

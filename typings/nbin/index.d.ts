@@ -66,11 +66,6 @@ declare module "@coder/nbin" {
     readonly nodePath?: string
 
     /**
-     * Suppresses log output.
-     */
-    readonly suppressOutput?: boolean
-
-    /**
      * Main file for your application.
      * Will be called as the entrypoint.
      */
