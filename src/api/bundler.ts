@@ -15,7 +15,7 @@ export class Binary implements nbin.Binary {
 
   public constructor(private readonly options: nbin.BinaryOptions) {}
 
-  public writeFile(pathName: string, content: Buffer): void {
+  public writeFile(pathName: string, content: Buffer | string): void {
     const parts = path
       .normalize(pathName)
       .split(path.sep)
@@ -24,7 +24,7 @@ export class Binary implements nbin.Binary {
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
       if (i === parts.length - 1) {
-        writableFs.write(part, content)
+        writableFs.write(part, typeof content === "string" ? Buffer.from(content) : content)
       } else {
         writableFs = writableFs.cd(part)
       }
@@ -128,7 +128,7 @@ export class Binary implements nbin.Binary {
   }
 
   private async cacheBinary(): Promise<Buffer> {
-    let nodeBinaryPath = this.options.nodePath || path.join(__dirname, "../../lib/node/out/Release/node")
+    let nodeBinaryPath = this.options.nodePath || path.join(__dirname, "../../lib/node/node")
     const nodeBinaryName = this.nodeBinaryName
 
     // By default we use the locally compiled node. If that or the provided Node
