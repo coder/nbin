@@ -1,21 +1,14 @@
 /**
- * Application entrypoint.
- *
- * Patched to execute then continue normal node instantiation.
- *
- * We can set `process.argv` here to easily passthrough.
+ * Application entry point.
  */
 import * as nbin from "nbin"
 
-/**
- * Specify the version of nbin this binary was built with.
- */
+// Set the version globally.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(process.versions as any).nbin = nbin.version
 
-/**
- * If bypassing nbin don't touch a thing.
- */
-if (!process.env.NBIN_BYPASS) {
-  process.argv.splice(1, 0, nbin.mainFile)
-}
+// Splice in the main file.
+process.argv.splice(1, 0, nbin.mainFile)
+
+// Kick things off by loading the main file.
+require("module").runMain()

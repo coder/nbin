@@ -1,5 +1,6 @@
 /**
- * A patch for `fs` permitting certain directories to be routed within the binary.
+ * A patch for `fs` permitting certain directories to be routed within the
+ * binary.
  */
 import * as fs from "fs"
 import * as nbin from "nbin"
@@ -18,53 +19,39 @@ interface OpenFile {
 /**
  * Fills `${pathName}/*` with the binary stuff.
  */
-export const fillFs = (pathName: string): void => {
+export const fillFs = (pathName: string, filesystem: nbin.Filesystem): void => {
   const openFiles = new Map<number, OpenFile>()
   const override = <T extends keyof typeof fs>(
     propertyName: T,
-    callback: (callOld: () => any) => Omit<typeof fs[T], "__promisify__" | "native">,
+    factory: (callOld: () => any) => Omit<typeof fs[T], "__promisify__" | "native">,
     customPromisify?: (...args: any[]) => Promise<any>
   ): void => {
-    const oldfunc = ((fs as any)[propertyName](
-      /**
-       * Overridding the FS func
-       */
-      fs as any
-    )[propertyName] = (...args: any[]): any => {
-      const callOld = (): any => {
-        return (oldfunc as any)(...args)
-      }
+    const oldfunc = (fs as any)[propertyName]
+    ;(fs as any)[propertyName] = (...args: any[]): any => {
+      const callOld = (): any => (oldfunc as any)(...args)
 
+      // Try to determine whether this call falls within the path we are trying
+      // to fill. If it doesn't we'll call the original method.
       let realPath = args[0]
-
-      /**
-       * If this is a number, its likely a file descriptor
-       */
+      // Likely a file descriptor
       if (typeof realPath === "number") {
         const newFd = args[0]
         const maybeRealPath = openFiles.get(newFd)
         if (maybeRealPath) {
           realPath = maybeRealPath
         }
-      }
-
-      /**
-       * If this is a string, its likely a filepath
-       */
-      if (typeof realPath === "string") {
+        // Likely a file path.
+      } else if (typeof realPath === "string") {
         const newPath = realPath
         const rel = path.relative(pathName, newPath!)
         if (!rel.startsWith("..")) {
-          // It's in the fill path
-          // Do stuff here w/ the rest of the args
-
-          const func = callback(() => callOld())
-          return (func as any)(...args)
+          // Looks like it falls within the fill path.
+          return (factory(callOld) as any)(...args)
         }
       }
 
       return callOld()
-    })
+    }
 
     if (customPromisify) {
       ;(fs as any)[propertyName][util.promisify.custom] = customPromisify
@@ -83,13 +70,13 @@ export const fillFs = (pathName: string): void => {
   }
 
   override("access", (callOld) => (pathName: fs.PathLike): void => {
-    if (!nbin.existsSync(pathName)) {
+    if (!filesystem.existsSync(pathName)) {
       return callOld()
     }
   })
 
   override("accessSync", (callOld) => (pathName: fs.PathLike): void => {
-    if (!nbin.existsSync(pathName)) {
+    if (!filesystem.existsSync(pathName)) {
       return callOld()
     }
   })
@@ -114,7 +101,7 @@ export const fillFs = (pathName: string): void => {
   override(
     "exists",
     () => (pathName: fs.PathLike, callback: Function): void => {
-      callback(nbin.existsSync(pathName))
+      callback(filesystem.existsSync(pathName))
     },
     (pathName: fs.PathLike): Promise<boolean> => {
       return new Promise((resolve) => {
@@ -126,7 +113,7 @@ export const fillFs = (pathName: string): void => {
   )
 
   override("existsSync", () => (pathName: fs.PathLike): boolean => {
-    return nbin.existsSync(pathName)
+    return filesystem.existsSync(pathName)
   })
 
   override(
@@ -177,7 +164,7 @@ export const fillFs = (pathName: string): void => {
   }
 
   override("open", (callOld) => (pathName: fs.PathLike, ...args: any[]): void => {
-    if (!nbin.existsSync(pathName)) {
+    if (!filesystem.existsSync(pathName)) {
       return callOld()
     }
     const fd = doOpen(pathName)
@@ -191,7 +178,7 @@ export const fillFs = (pathName: string): void => {
   })
 
   override("openSync", (callOld) => (pathName: fs.PathLike): number => {
-    if (!nbin.existsSync(pathName)) {
+    if (!filesystem.existsSync(pathName)) {
       return callOld()
     }
     return doOpen(pathName)
@@ -217,7 +204,7 @@ export const fillFs = (pathName: string): void => {
         position = openFile.readLocation
         hadPosition = false
       }
-      nbin
+      filesystem
         .readFile(openFile.path, "buffer", position, length)
         .then((content) => {
           buffer.set(content, offset)
@@ -260,7 +247,7 @@ export const fillFs = (pathName: string): void => {
         position = openFile.readLocation
         hadPosition = false
       }
-      const content = nbin.readFileSync(openFile.path, "buffer", position, length)
+      const content = filesystem.readFileSync(openFile.path, "buffer", position, length)
       buffer.set(content, offset)
       if (!hadPosition) {
         openFile.readLocation += content.byteLength
@@ -274,11 +261,11 @@ export const fillFs = (pathName: string): void => {
     if (!cb) {
       return
     }
-    cb(null, nbin.readdirSync(pathName))
+    cb(null, filesystem.readdirSync(pathName))
   })
 
   override("readdirSync", () => (pathName: string): string[] => {
-    return [...nbin.readdirSync(pathName)]
+    return [...filesystem.readdirSync(pathName)]
   })
 
   override("readFile", () => (pathName: string, ...args: any[]): void => {
@@ -296,7 +283,7 @@ export const fillFs = (pathName: string): void => {
     if (!cb) {
       return
     }
-    nbin
+    filesystem
       .readFile(pathName, encoding as "utf8")
       .then((result) => {
         cb(null, result)
@@ -317,7 +304,7 @@ export const fillFs = (pathName: string): void => {
         encoding = opts.encoding
       }
     }
-    return nbin.readFileSync(pathName, encoding as "buffer")
+    return filesystem.readFileSync(pathName, encoding as "buffer")
   })
 
   override("realpath", () => (pathName: fs.PathLike, ...args: any[]): void => {
@@ -333,7 +320,7 @@ export const fillFs = (pathName: string): void => {
   })
 
   const doStat = (pathName: fs.PathLike): fs.Stats => {
-    const stat = nbin.statSync(pathName)
+    const stat = filesystem.statSync(pathName)
     const date = new Date()
 
     return new (class {

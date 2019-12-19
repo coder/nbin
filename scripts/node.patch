@@ -1,5 +1,5 @@
 diff --git a/lib/internal/modules/cjs/loader.js b/lib/internal/modules/cjs/loader.js
-index 64505220ab..637bf82159 100644
+index 64505220ab..b9cf452252 100644
 --- a/lib/internal/modules/cjs/loader.js
 +++ b/lib/internal/modules/cjs/loader.js
 @@ -63,6 +63,10 @@ const manifest = getOptionValue('--experimental-policy') ?
@@ -19,7 +19,7 @@ index 64505220ab..637bf82159 100644
    }
 -  const result = internalModuleStat(filename);
 +  // NOTE@coder: Try loading from within the binary.
-+  const s = nbin.statSync(filename);
++  const s = nbin.fs.statSync(filename);
 +  const result = s.isDirectory ?
 +    1 :
 +    (s.isFile ? 0 : internalModuleStat(filename));
@@ -33,8 +33,8 @@ index 64505220ab..637bf82159 100644
 -  const json = internalModuleReadJSON(path.toNamespacedPath(jsonPath));
 +  // NOTE@coder: Try loading from the binary.
 +  let json;
-+  if (nbin.existsSync(jsonPath)) {
-+    json = nbin.readFileSync(jsonPath, 'utf8');
++  if (nbin.fs.existsSync(jsonPath)) {
++    json = nbin.fs.readFileSync(jsonPath, 'utf8');
 +  } else {
 +    json = internalModuleReadJSON(path.toNamespacedPath(jsonPath));
 +  }
@@ -46,7 +46,7 @@ index 64505220ab..637bf82159 100644
  
  function toRealPath(requestPath) {
 +  // NOTE@coder: Try loading from the binary.
-+  if (nbin.existsSync(requestPath)) {
++  if (nbin.fs.existsSync(requestPath)) {
 +    return requestPath;
 +  }
    return fs.realpathSync(requestPath, {
@@ -59,8 +59,8 @@ index 64505220ab..637bf82159 100644
 -  const content = fs.readFileSync(filename, 'utf8');
 +  // NOTE@coder: Try loading from within the binary.
 +  let content;
-+  if (nbin.existsSync(filename)) {
-+    content = nbin.readFileSync(filename, 'utf8');
++  if (nbin.fs.existsSync(filename)) {
++    content = nbin.fs.readFileSync(filename, 'utf8');
 +  } else {
 +    content = fs.readFileSync(filename, 'utf8');
 +  }
@@ -69,7 +69,7 @@ index 64505220ab..637bf82159 100644
 +
 +// NOTE@coder: Native extension for .gz
 +Module._extensions['.gz'] = function(module, filename) {
-+  const content = zlib.gunzipSync(nbin.readFileSync(filename)).toString('utf8');
++  const content = zlib.gunzipSync(nbin.fs.readFileSync(filename)).toString('utf8');
    module._compile(stripBOM(content), filename);
  };
  
@@ -79,23 +79,23 @@ index 64505220ab..637bf82159 100644
 -  const content = fs.readFileSync(filename, 'utf8');
 +  // NOTE@coder: Try loading from within the binary.
 +  let content;
-+  if (nbin.existsSync(filename)) {
-+    content = nbin.readFileSync(filename, 'utf8');
++  if (nbin.fs.existsSync(filename)) {
++    content = nbin.fs.readFileSync(filename, 'utf8');
 +  } else {
 +    content = fs.readFileSync(filename, 'utf8');
 +  }
  
    if (manifest) {
      const moduleURL = pathToFileURL(filename);
-@@ -1017,12 +1053,34 @@ Module._extensions['.json'] = function(module, filename) {
+@@ -1017,12 +1053,43 @@ Module._extensions['.json'] = function(module, filename) {
  // Native extension for .node
  Module._extensions['.node'] = function(module, filename) {
    if (manifest) {
 -    const content = fs.readFileSync(filename);
 +    // NOTE@coder: Try loading from within the binary.
 +    let content;
-+    if (nbin.existsSync(filename)) {
-+      content = nbin.readFileSync(filename);
++    if (nbin.fs.existsSync(filename)) {
++      content = nbin.fs.readFileSync(filename);
 +    } else {
 +      content = fs.readFileSync(filename);
 +    }
@@ -106,13 +106,22 @@ index 64505220ab..637bf82159 100644
 -  return process.dlopen(module, path.toNamespacedPath(filename));
 +  // NOTE@coder: Try extracting from the binary to a temporary directory.
 +  let isInternal = false;
-+  if (nbin.existsSync(filename)) {
++  if (nbin.fs.existsSync(filename)) {
 +    const tmpDir = path.join(os.tmpdir(), 'nbin', nbin.version);
 +    const tmpFile = path.join(tmpDir, path.basename(filename));
 +    if (!fs.existsSync(tmpFile)) {
-+      fs.mkdirSync(path.dirname(tmpDir));
-+      fs.mkdirSync(tmpDir);
-+      fs.writeFileSync(tmpFile, nbin.readFileSync(filename));
++      const mkdir = (path) => {
++        try {
++          fs.mkdirSync(path);
++        } catch (error) {
++          if (error.code !== 'EEXIST') {
++            throw error;
++          }
++        }
++      };
++      mkdir(path.dirname(tmpDir));
++      mkdir(tmpDir);
++      fs.writeFileSync(tmpFile, nbin.fs.readFileSync(filename));
 +    }
 +    filename = tmpFile;
 +    isInternal = true;
@@ -125,18 +134,16 @@ index 64505220ab..637bf82159 100644
  
  Module._extensions['.mjs'] = function(module, filename) {
 diff --git a/src/node.cc b/src/node.cc
-index ae53d0c31c..76e4b9cf66 100644
+index ae53d0c31c..c6fa2b5208 100644
 --- a/src/node.cc
 +++ b/src/node.cc
-@@ -663,6 +663,11 @@ int ProcessGlobalArgs(std::vector<std::string>* args,
-   // Parse a few arguments which are specific to Node.
-   std::vector<std::string> v8_args;
+@@ -411,7 +411,8 @@ MaybeLocal<Value> StartMainThreadExecution(Environment* env) {
+   // To allow people to extend Node in different ways, this hook allows
+   // one to drop a file lib/_third_party_main.js into the build
+   // directory which will be executed instead of Node's normal loading.
+-  if (NativeModuleEnv::Exists("_third_party_main")) {
++  // NOTE@coder: Only load the packaged code if we aren't bypassing it.
++  if (!getenv("NBIN_BYPASS") && NativeModuleEnv::Exists("_third_party_main")) {
+     return StartExecution(env, "internal/main/run_third_party_main");
+   }
  
-+  // NOTE@coder: If we aren't bypassing nbin, don't process the arguments.
-+  if (!getenv("NBIN_BYPASS") && !is_env) {
-+    return 0;
-+  }
-+
-   Mutex::ScopedLock lock(per_process::cli_options_mutex);
-   options_parser::Parse(
-       args,

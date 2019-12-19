@@ -15,12 +15,19 @@ const nodePath = path.join(__dirname, "../lib/node/node")
 const tmpDir = path.join(os.tmpdir(), "nbin/tests")
 const runBinary = async (
   binary: Binary,
-  expected?: { stdout?: string; stderr?: string }
+  expected?: { stdout?: string; stderr?: string },
+  env?: NodeJS.ProcessEnv,
+  args?: string[]
 ): Promise<{ stdout: string; stderr: string }> => {
   const tmpFile = path.join(tmpDir, `${binId++}`)
   await fs.writeFile(tmpFile, await binary.build())
   await fs.chmod(tmpFile, "755")
-  const output = await util.promisify(cp.exec)(tmpFile)
+  const output = await util.promisify(cp.exec)(`${tmpFile} ${(args || []).join(" ")}`, {
+    env: {
+      ...process.env,
+      ...(env || {}),
+    },
+  })
   assert.equal(output.stderr, (expected && expected.stderr) || "")
   assert.equal(output.stdout, (expected && expected.stdout) || "")
   return output
@@ -42,8 +49,23 @@ describe("bundler", () => {
     const mainFile = "/example.js"
     const bin = new Binary({ nodePath, mainFile })
     const stdout = "hello!"
-    bin.writeFile(mainFile, `console.log("${stdout}");`)
+    bin.writeFile(mainFile, `process.stdout.write("${stdout}");`)
     await runBinary(bin, { stdout })
+  })
+
+  it("should bypass nbin", async () => {
+    const mainFile = "/example.js"
+    const bin = new Binary({ nodePath, mainFile })
+    const stdout = "bypassed hello!"
+    bin.writeFile(mainFile, `process.stdout.write("hello!");`)
+    await runBinary(
+      bin,
+      { stdout },
+      {
+        NBIN_BYPASS: "true",
+      },
+      ["-e", `'process.stdout.write("${stdout}")'`]
+    )
   })
 
   /**
@@ -55,7 +77,7 @@ describe("bundler", () => {
       const bin = new Binary({ nodePath, mainFile })
       const stdout = "hi"
       bin.writeModule(path.join(__dirname, "../node_modules", "node-pty"))
-      bin.writeFile(mainFile, `require("node-pty");console.log("${stdout}");`)
+      bin.writeFile(mainFile, `require("node-pty");process.stdout.write("${stdout}");`)
       await runBinary(bin, { stdout })
     })
   }
@@ -69,15 +91,16 @@ describe("bundler", () => {
       const proc = require("child_process").fork("/test.js", [], {
         stdio: [null, null, null, "ipc"],
       })
-      proc.stdout.on("data", (d: Buffer) => {
-        console.log(d.toString("utf8"))
-        setTimeout(() => process.exit(0), 10000)
+      proc.stdout.setEncoding("utf8")
+      proc.stdout.on("data", (d: string) => {
+        process.stdout.write(d)
+        process.exit(0)
       })
     }
 
     const stdout = "hi"
     bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
-    bin.writeFile("/test.js", `console.log("${stdout}");`)
+    bin.writeFile("/test.js", `process.stdout.write("${stdout}");`)
     await runBinary(bin, { stdout })
   })
 
@@ -87,7 +110,7 @@ describe("bundler", () => {
   if (process.platform === "linux") {
     it("should fill fs", async () => {
       const mainFile = "/example.js"
-      const exampleContent = (): void => {
+      const exampleContent = (stdout: string): void => {
         const assert = require("assert") as typeof import("assert")
         const fs = require("fs") as typeof import("fs")
         const nbin = require("nbin") as typeof import("nbin")
@@ -102,43 +125,45 @@ describe("bundler", () => {
             fs.writeFileSync("/donkey/banana", "asdf")
             process.exit(1)
           } catch (ex) {
-            console.log("success")
+            process.stdout.write(stdout)
           }
         }
       }
+      const stdout = "success"
       const bin = new Binary({ nodePath, mainFile })
-      bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
+      bin.writeFile(mainFile, `(${exampleContent.toString()})("${stdout}")`)
       bin.writeFile("/donkey/frog", "example")
-      await runBinary(bin, { stdout: "success" })
+      await runBinary(bin, { stdout })
     })
   }
 
   it("should fill fs and propogate errors", async () => {
     const mainFile = "/example.js"
-    const exampleContent = (): void => {
+    const exampleContent = (stdout: string): void => {
       const fs = require("fs") as typeof import("fs")
       const nbin = require("nbin") as typeof import("nbin")
 
       nbin.shimNativeFs("/home/kyle/node/coder/code-server/packages/server")
       fs.open("/home/kyle/node/coder/code-server/packages/server/build/web/auth/__webpack_hmr", "r", (err) => {
         if (err) {
-          console.log("success")
+          process.stdout.write(stdout)
           process.exit(0)
         }
 
         process.exit(1)
       })
     }
+    const stdout = "success"
     const bin = new Binary({ nodePath, mainFile })
-    bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
-    await runBinary(bin, { stdout: "success" })
+    bin.writeFile(mainFile, `(${exampleContent.toString()})("${stdout}")`)
+    await runBinary(bin, { stdout })
   })
 
   it("should load gzip'd javascript", async () => {
     const mainFile = "/example.js.gz"
     const bin = new Binary({ nodePath, mainFile })
     const stdout = "success"
-    bin.writeFile(mainFile, zlib.gzipSync(Buffer.from(`console.log("${stdout}");process.exit(0);`)))
+    bin.writeFile(mainFile, zlib.gzipSync(Buffer.from(`process.stdout.write("${stdout}");process.exit(0);`)))
     await runBinary(bin, { stdout })
   })
 })

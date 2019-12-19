@@ -1,3 +1,6 @@
+import * as fs from "fs"
+import * as nbin from "nbin"
+import * as path from "path"
 import { readString, writeString } from "./buffer"
 import { createNotFound } from "./error"
 
@@ -20,7 +23,7 @@ export interface ReadableFilesystemProvider {
   readContentsSync: (offset: number, length: number) => Buffer
 }
 
-export class ReadableFilesystem {
+export class ReadableFilesystem implements nbin.Filesystem {
   private readonly directories: Map<string, ReadableFilesystem> = new Map()
   public static fromBuffer(buffer: Buffer, provider: ReadableFilesystemProvider): ReadableFilesystem {
     let offset = 0
@@ -72,11 +75,11 @@ export class ReadableFilesystem {
 
   protected readonly files: Map<string, File> = new Map()
 
-  public ls(): ReadonlyArray<string> {
+  private ls(): ReadonlyArray<string> {
     return [...Array.from(this.directories.keys()), ...Array.from(this.files.keys())]
   }
 
-  public stat(name: string): Stat {
+  private stat(name: string): Stat {
     const file = this.files.get(name)
     return {
       isFile: !!file,
@@ -85,11 +88,11 @@ export class ReadableFilesystem {
     }
   }
 
-  public cd(name: string): ReadableFilesystem | undefined {
+  private cd(name: string): ReadableFilesystem | undefined {
     return this.directories.get(name)
   }
 
-  public read(name: string, offset?: number, length?: number): Promise<Buffer> {
+  private read(name: string, offset?: number, length?: number): Promise<Buffer> {
     const file = this.files.get(name)
     if (!file) {
       return Promise.reject(createNotFound())
@@ -97,12 +100,100 @@ export class ReadableFilesystem {
     return file.read(offset, length)
   }
 
-  public readSync(name: string, offset?: number, length?: number): Buffer {
+  private readSync(name: string, offset?: number, length?: number): Buffer {
     const file = this.files.get(name)
     if (!file) {
       throw createNotFound()
     }
     return file.readSync(offset, length)
+  }
+
+  public async readFile(pathName: fs.PathLike, encoding?: "buffer", offset?: number, length?: number): Promise<Buffer>
+  public async readFile(pathName: fs.PathLike, encoding?: "utf8", offset?: number, length?: number): Promise<string>
+  public async readFile(
+    pathName: fs.PathLike,
+    encoding?: "utf8" | "buffer",
+    offset?: number,
+    length?: number
+  ): Promise<Buffer | string> {
+    const res = this.getFilesystem(pathName)
+    if (!res) {
+      throw createNotFound()
+    }
+    const b = await res.fs.read(res.name, offset, length)
+    if (encoding && encoding === "utf8") {
+      return b.toString()
+    }
+    return b
+  }
+
+  public readFileSync(pathName: fs.PathLike, encoding?: "buffer", offset?: number, length?: number): Buffer
+  public readFileSync(pathName: fs.PathLike, encoding?: "utf8", offset?: number, length?: number): string
+  public readFileSync(
+    pathName: fs.PathLike,
+    encoding?: "utf8" | "buffer",
+    offset?: number,
+    length?: number
+  ): Buffer | string {
+    const res = this.getFilesystem(pathName)
+    if (!res) {
+      throw createNotFound()
+    }
+    const b = res.fs.readSync(res.name, offset, length)
+    if (encoding && encoding === "utf8") {
+      return b.toString()
+    }
+    return b
+  }
+
+  public existsSync = (pathName: fs.PathLike): boolean => {
+    const stat = this.statSync(pathName)
+    return stat.isFile || stat.isDirectory
+  }
+
+  public readdirSync(pathName: fs.PathLike): ReadonlyArray<string> {
+    const res = this.getFilesystem(pathName)
+    if (!res) {
+      throw createNotFound()
+    }
+    const filesystem = res.fs.cd(res.name)
+    if (!filesystem) {
+      throw createNotFound()
+    }
+    return filesystem.ls()
+  }
+
+  public statSync(pathName: fs.PathLike): Stat {
+    const res = this.getFilesystem(pathName)
+    if (!res) {
+      return {
+        isDirectory: false,
+        isFile: false,
+        size: 0,
+      }
+    }
+    return res.fs.stat(res.name)
+  }
+
+  /**
+   * Will split the inputted path and attempt to nest down the tree to find the
+   * file system for the specified path.
+   */
+  private getFilesystem(fullPath: fs.PathLike): { fs: ReadableFilesystem; name: string } | undefined {
+    const parts = path
+      .normalize(fullPath.toString())
+      .split(path.sep)
+      .filter((i) => i.length)
+    let filesystem = this as ReadableFilesystem | undefined
+    const last = parts.length - 1
+    for (let i = 0; i < last; ++i) {
+      if (!filesystem) {
+        break
+      }
+      const part = parts[i]
+      filesystem = filesystem.cd(part)
+    }
+    return filesystem && { fs: filesystem, name: parts[last] }
   }
 }
 
