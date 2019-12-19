@@ -40,7 +40,7 @@ function mac-build() {
 function main() {
   cd "$(dirname "$0")/.."
 
-  local node_version=12.13.1
+  local node_version=12.14.0
   local version
   version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 

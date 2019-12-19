@@ -164,7 +164,7 @@ export class Binary implements nbin.Binary {
     if (currentArchitecture === "x64") {
       currentArchitecture = "x86_64"
     }
-    const nodeVersion = "12.13.1"
+    const nodeVersion = "12.14.0"
     const binName = `${this.version}/node-${nodeVersion}-${currentPlatform}-${currentArchitecture}`
 
     return binName
