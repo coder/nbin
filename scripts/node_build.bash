@@ -28,6 +28,9 @@ function main() {
     cores=$(awk '/^processor/{print $3}' /proc/cpuinfo | wc -l)
   fi
 
+  echo "ccache directory: $CCACHE_DIR"
+  echo "cores: $cores"
+
   ./configure \
     --dest-cpu=x64 \
     --link-module ./lib/nbin.js \
