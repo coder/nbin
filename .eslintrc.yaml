@@ -21,4 +21,4 @@ rules:
   # For overloads.
   no-dupe-class-members: off
 
-  import/no-unresolved: [2, { ignore: [ '^nbin$', '^@coder/nbin$' ]}]
+  import/no-unresolved: [2, { ignore: [ '^nbin$', '^@coder/nbin$' ] }]

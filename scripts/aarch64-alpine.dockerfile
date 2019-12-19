@@ -1,4 +1,4 @@
-FROM balenalib/aarch64-alpine-node:10.15-edge-build
+FROM balenalib/aarch64-alpine-node:12.14-edge-build
 
 RUN ["cross-build-start"]
 
