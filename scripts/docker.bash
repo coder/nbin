@@ -33,9 +33,10 @@ function main() {
 
   # If there are command line arguments, use those. Otherwise loop through all
   # the existing dockerfiles.
-  if [[ -n "${1:-}" ]] ; then
-    local name="$1" ; shift
-    build "$name"
+  if [[ -n ${1:-} ]] ; then
+    while [[ -n ${1:-} ]] ; do
+      build "$1" ; shift
+    done
   else
     for dockerfile in *.dockerfile ; do
       local name="${dockerfile%.dockerfile}"
