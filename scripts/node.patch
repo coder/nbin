@@ -1,19 +1,18 @@
 diff --git a/lib/internal/modules/cjs/loader.js b/lib/internal/modules/cjs/loader.js
-index 64505220ab..b9cf452252 100644
+index 64505220ab..da14bb6327 100644
 --- a/lib/internal/modules/cjs/loader.js
 +++ b/lib/internal/modules/cjs/loader.js
-@@ -63,6 +63,10 @@ const manifest = getOptionValue('--experimental-policy') ?
+@@ -63,6 +63,9 @@ const manifest = getOptionValue('--experimental-policy') ?
    require('internal/process/policy').manifest :
    null;
  const { compileFunction } = internalBinding('contextify');
 +// NOTE@coder: Modules used in our customizations below.
 +const nbin = require('nbin');
-+const os = require('os');
 +const zlib = require('zlib');
  
  const {
    ERR_INVALID_ARG_VALUE,
-@@ -118,7 +122,11 @@ function stat(filename) {
+@@ -118,7 +121,11 @@ function stat(filename) {
      const result = statCache.get(filename);
      if (result !== undefined) return result;
    }
@@ -26,7 +25,7 @@ index 64505220ab..b9cf452252 100644
    if (statCache !== null) statCache.set(filename, result);
    return result;
  }
-@@ -224,7 +232,13 @@ function readPackage(requestPath) {
+@@ -224,7 +231,13 @@ function readPackage(requestPath) {
    const existing = packageJsonCache.get(jsonPath);
    if (existing !== undefined) return existing;
  
@@ -41,7 +40,7 @@ index 64505220ab..b9cf452252 100644
    if (json === undefined) {
      packageJsonCache.set(jsonPath, false);
      return false;
-@@ -334,6 +348,10 @@ function tryFile(requestPath, isMain) {
+@@ -334,6 +347,10 @@ function tryFile(requestPath, isMain) {
  }
  
  function toRealPath(requestPath) {
@@ -52,7 +51,7 @@ index 64505220ab..b9cf452252 100644
    return fs.realpathSync(requestPath, {
      [internalFS.realpathCacheKey]: realpathCache
    });
-@@ -991,14 +1009,32 @@ Module._extensions['.js'] = function(module, filename) {
+@@ -991,14 +1008,32 @@ Module._extensions['.js'] = function(module, filename) {
        }
      }
    }
@@ -87,7 +86,7 @@ index 64505220ab..b9cf452252 100644
  
    if (manifest) {
      const moduleURL = pathToFileURL(filename);
-@@ -1017,12 +1053,43 @@ Module._extensions['.json'] = function(module, filename) {
+@@ -1017,12 +1052,31 @@ Module._extensions['.json'] = function(module, filename) {
  // Native extension for .node
  Module._extensions['.node'] = function(module, filename) {
    if (manifest) {
@@ -107,20 +106,8 @@ index 64505220ab..b9cf452252 100644
 +  // NOTE@coder: Try extracting from the binary to a temporary directory.
 +  let isInternal = false;
 +  if (nbin.fs.existsSync(filename)) {
-+    const tmpDir = path.join(os.tmpdir(), 'nbin', nbin.version);
-+    const tmpFile = path.join(tmpDir, path.basename(filename));
++    const tmpFile = path.join(nbin.tmpDir, path.basename(filename));
 +    if (!fs.existsSync(tmpFile)) {
-+      const mkdir = (path) => {
-+        try {
-+          fs.mkdirSync(path);
-+        } catch (error) {
-+          if (error.code !== 'EEXIST') {
-+            throw error;
-+          }
-+        }
-+      };
-+      mkdir(path.dirname(tmpDir));
-+      mkdir(tmpDir);
 +      fs.writeFileSync(tmpFile, nbin.fs.readFileSync(filename));
 +    }
 +    filename = tmpFile;

@@ -61,4 +61,9 @@ declare module "nbin" {
    * Provides file system access into the binary.
    */
   export const fs: Filesystem
+
+  /**
+   * Where to extract temporary files.
+   */
+  export const tmpDir: string
 }

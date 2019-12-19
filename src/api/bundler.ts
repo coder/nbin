@@ -1,14 +1,15 @@
-import { field, logger, Level } from "@coder/logger"
+import { field, Level, logger } from "@coder/logger"
 import * as nbin from "@coder/nbin"
 import * as fs from "fs-extra"
 import * as glob from "glob"
 import fetch from "node-fetch"
+import * as ora from "ora"
 import * as os from "os"
 import * as path from "path"
 import { writeString } from "../common/buffer"
 import { WritableFilesystem } from "../common/filesystem"
 import { createFooter } from "../common/footer"
-import * as ora from "ora"
+import { getXdgCacheHome } from "../common/util"
 
 export class Binary implements nbin.Binary {
   private readonly fs: WritableFilesystem = new WritableFilesystem()
@@ -116,17 +117,6 @@ export class Binary implements nbin.Binary {
     ])
   }
 
-  private getXdgCacheHome(name: string): string {
-    switch (process.platform) {
-      case "win32":
-        return path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), "AppData/Local"), `${name}/Cache`)
-      case "darwin":
-        return path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), "Library/Caches"), name)
-      default:
-        return path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), ".cache"), name)
-    }
-  }
-
   private async cacheBinary(): Promise<Buffer> {
     let nodeBinaryPath = this.options.nodePath || path.join(__dirname, "../../lib/node/node")
     const nodeBinaryName = this.nodeBinaryName
@@ -135,7 +125,7 @@ export class Binary implements nbin.Binary {
     // path doesn't exist then we use the cache directory and will download a
     // pre-built binary there.
     if (!(await fs.pathExists(nodeBinaryPath))) {
-      const cacheDir = this.getXdgCacheHome("nbin")
+      const cacheDir = getXdgCacheHome("nbin")
       nodeBinaryPath = path.join(cacheDir, nodeBinaryName)
     }
 

@@ -1,8 +1,10 @@
 import * as fs from "fs"
 import * as nbin from "nbin"
+import * as path from "path"
 import { readString } from "../common/buffer"
 import { ReadableFilesystem } from "../common/filesystem"
 import { readFooter } from "../common/footer"
+import { mkdirp, getXdgCacheHome } from "../common/util"
 import { fillFs } from "./fs"
 
 const execPath = process.execPath
@@ -43,6 +45,9 @@ const readableFs = ReadableFilesystem.fromBuffer(fsBuffer, {
   },
 })
 
+const tmpDir = path.join(getXdgCacheHome("nbin"), version.value)
+mkdirp(tmpDir)
+
 const exported: typeof nbin = {
   version: version.value,
   mainFile: mainFile.value,
@@ -50,6 +55,7 @@ const exported: typeof nbin = {
   shimNativeFs: (path: string): void => {
     fillFs(path, readableFs)
   },
+  tmpDir,
 }
 
 export = exported
