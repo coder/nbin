@@ -4,6 +4,9 @@ node_js:
 - 10.15.1
 services:
 - docker
+git:
+  depth: 3
+  submodules_depth: 3
 cache:
   directories:
     - /home/travis/.cache/ccache
