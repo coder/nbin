@@ -42,6 +42,7 @@ function docker-build() {
 
 function mac-build() {
   yarn build
+  yarn test
 }
 
 function main() {
