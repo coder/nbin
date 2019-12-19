@@ -10,7 +10,7 @@ git:
 cache:
   directories:
     - /home/travis/.cache/ccache
-    - /home/travis/Library/Caches/ccache
+    - /Users/travis/Library/Caches/ccache
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - export PATH="/usr/local/opt/ccache/libexec:$PATH"
