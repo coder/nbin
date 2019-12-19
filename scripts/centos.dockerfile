@@ -1,9 +1,7 @@
 FROM centos:7
 
-RUN yum install -y centos-release-scl
+RUN yum install -y centos-release-scl devtoolset-6 gcc-c++ git
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
-RUN yum install -y devtoolset-6
-RUN yum install -y gcc-c++
 RUN rpm -Uvh http://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/c/ccache-3.3.4-1.el7.x86_64.rpm
 
 RUN mkdir /root/node
