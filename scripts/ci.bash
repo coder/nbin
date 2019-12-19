@@ -7,8 +7,15 @@ function docker-build() {
   local image="$1" ; shift
   local prebuild_command="$1" ; shift
 
+  local cache="$HOME/.cache"
+  if [[ -n ${XDG_CACHE_HOME:-} ]] ; then
+    cache="$XDG_CACHE_HOME"
+  elif [[ $OSTYPE == "darwin"* ]]; then
+    cache="$HOME/Library/Caches"
+  fi
+
   local containerId
-  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$HOME/.cache/ccache:/root/.cache/ccache" "$image")
+  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$cache/ccache/$image:/root/.cache/ccache" "$image")
   docker start "$containerId"
 
   function docker-exec() {
