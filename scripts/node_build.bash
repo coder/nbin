@@ -14,6 +14,7 @@ function main() {
 
   if ! yarn patch:apply 2> /dev/null ; then
     echo "Failed to patch; assuming already patched"
+    git status
   fi
 
   local -i cores=2
