@@ -82,17 +82,16 @@ describe("bundler", () => {
     })
   }
 
-  it("should fork", async () => {
+  it("should fork and bypass nbin", async () => {
     const mainFile = "/example.js"
     const bin = new Binary({ nodePath, mainFile })
 
     const exampleContent = (): void => {
       process.env.NBIN_BYPASS = "true"
       const proc = require("child_process").fork("/test.js", [], {
-        stdio: [null, null, null, "ipc"],
+        stdio: "inherit",
       })
-      proc.stdout.setEncoding("utf8")
-      proc.stdout.on("data", (d: string) => {
+      proc.on("message", (d: string) => {
         process.stdout.write(d)
         process.exit(0)
       })
@@ -100,7 +99,37 @@ describe("bundler", () => {
 
     const stdout = "hi"
     bin.writeFile(mainFile, `(${exampleContent.toString()})()`)
-    bin.writeFile("/test.js", `process.stdout.write("${stdout}");`)
+    bin.writeFile("/test.js", `process.send("${stdout}");`)
+    await runBinary(bin, { stdout })
+  })
+
+  it("should fork and not bypass nbin", async () => {
+    const mainFile = "/example.js"
+    const bin = new Binary({ nodePath, mainFile })
+
+    const exampleContent = (stdout: string): void => {
+      if (!process.env.LOADED_NBIN) {
+        process.env.LOADED_NBIN = "true"
+        const proc = require("child_process").fork("/test.js", [], {
+          stdio: "inherit",
+        })
+        proc.on("message", (d: string) => {
+          process.stdout.write(d)
+          process.exit(0)
+        })
+      } else {
+        if (process.send) {
+          process.send(stdout)
+        } else {
+          process.stderr.write("wasn't spawned with ipc")
+        }
+        process.exit(0)
+      }
+    }
+
+    const stdout = "from the main file"
+    bin.writeFile(mainFile, `(${exampleContent.toString()})("${stdout}")`)
+    bin.writeFile("/test.js", `process.send("from the child");`)
     await runBinary(bin, { stdout })
   })
 
