@@ -11,8 +11,3 @@ RUN cd /root/node && curl https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-x
 RUN ln -s /root/node/bin/node /usr/bin/node
 ENV PATH "$PATH:/root/node/bin"
 RUN npm install -g yarn
-
-# VOLUME ~/.ccache /ccache
-# RUN source /opt/rh/devtoolset-6/enable && scripts/node_build.sh
-# RUN npm rebuild
-# RUN npm 

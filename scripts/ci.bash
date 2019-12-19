@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ci.bash
+# ci.bash -- Build from CI.
 
 set -Eeuo pipefail
 
@@ -58,9 +58,7 @@ function main() {
     local binary_name="node-$node_version-$TARGET"
     local prebuild_command=""
     case $TARGET in
-      "alpine"        ) binary_name="$binary_name-x86_64" ;;
-      "aarch64-alpine") image="codercom/nbin-alpine-aarch64-alpine" ;;
-      "armv7hf-alpine") image="codercom/nbin-alpine-armv7hf-alpine" ;;
+      "alpine") binary_name="$binary_name-x86_64" ;;
       "centos")
         prebuild_command="source /opt/rh/devtoolset-6/enable"
         binary_name="$binary_name-x86_64"

@@ -8,6 +8,7 @@
     "test": "mocha",
     "coverage": "nyc mocha",
     "lint": "eslint src test typings --ext .ts",
+    "build:docker": "./scripts/docker.bash",
     "build:bundle": "browserify --node --no-bundle-external ./out/patches/nbin.js --standalone nbin --outfile ./lib/node/lib/nbin.js",
     "build:nbin": "tsc",
     "build:node": "./scripts/node_build.bash",

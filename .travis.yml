@@ -1,7 +1,7 @@
 language: node_js
 osx_image: xcode10.2
 node_js:
-- 12.13.1
+- 10.15.1
 services:
 - docker
 cache:
@@ -16,19 +16,19 @@ matrix:
   include:
   - os: linux
     env:
+      - TARGET="aarch64-alpine"
+  - os: linux
+    env:
+      - TARGET="aarch64"
+  - os: linux
+    env:
       - TARGET="alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="armv7hf-alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="aarch64-alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="aarch64"
-  # - os: linux
-  #   env:
-  #     - TARGET="armv7hf"
+  - os: linux
+    env:
+      - TARGET="armv7hf-alpine"
+  - os: linux
+    env:
+      - TARGET="armv7hf"
   - os: linux
     env:
       - TARGET="centos"
