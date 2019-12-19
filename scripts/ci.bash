@@ -9,7 +9,7 @@ function docker-build() {
   local prebuild_command="$1" ; shift
 
   local containerId
-  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$HOME/.cache:/ccache" "$image")
+  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$HOME/.cache/ccache:/ccache" "$image")
   docker start "$containerId"
 
   function docker-exec() {
