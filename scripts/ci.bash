@@ -5,11 +5,10 @@ set -Eeuo pipefail
 
 function docker-build() {
   local image="$1" ; shift
-  local binary_name="$1" ; shift
   local prebuild_command="$1" ; shift
 
   local containerId
-  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$HOME/.cache/ccache:/ccache" "$image")
+  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$HOME/.cache/ccache:/root/.cache/ccache" "$image")
   docker start "$containerId"
 
   function docker-exec() {
@@ -31,15 +30,11 @@ function docker-build() {
       ;;
   esac
 
-  docker cp "$containerId:/src/lib/node/node" "./build/$version/$binary_name"
   docker kill "$containerId"
 }
 
 function mac-build() {
-  local version="$1" ; shift
-  local node_version="$1" ; shift
   yarn build
-  cp ./lib/node/node "./build/$version/node-$node_version-darwin-x86_64"
 }
 
 function main() {
@@ -49,13 +44,12 @@ function main() {
   local version
   version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
-  mkdir -p "./build/$version"
-
+  local binary_name="node-$node_version-${TARGET:-darwin}"
   if [[ $OSTYPE == "darwin"* ]]; then
-    mac-build "$version" "$node_version"
+    binary_name="$binary_name-x86_64"
+    mac-build
   else
     local image="codercom/nbin-$TARGET"
-    local binary_name="node-$node_version-$TARGET"
     local prebuild_command=""
     case $TARGET in
       "alpine") binary_name="$binary_name-x86_64" ;;
@@ -64,8 +58,11 @@ function main() {
         binary_name="$binary_name-x86_64"
         ;;
     esac
-    docker-build "$image" "$binary_name" "$prebuild_command"
+    docker-build "$image" "$prebuild_command"
   fi
+
+  mkdir -p "./build/$version"
+  cp ./lib/node/node "./build/$version/$binary_name"
 }
 
 main "$@"
