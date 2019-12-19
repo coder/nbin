@@ -12,6 +12,13 @@ describe("util", () => {
     assert.equal(mkdirp(target), undefined)
     assert.equal(await fs.pathExists(target), true)
     assert.equal(mkdirp(target), undefined) // Shouldn't throw if it exists.
-    assert.throws(() => mkdirp(path.join("/unauthorized/foo/bar/baz")), /permission denied/)
+
+    // In CI we have permissions so we'll write a file to force an error.
+    try {
+      await fs.writeFile("/file", "")
+    } catch (error) {
+      // No problem.
+    }
+    assert.throws(() => mkdirp(path.join("/file/foo/bar/baz")), /Error/)
   })
 })
