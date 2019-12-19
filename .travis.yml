@@ -1,14 +1,13 @@
 language: node_js
 osx_image: xcode10.2
 node_js:
-- 10.15.1
+- 12.13.1
 services:
 - docker
 cache:
   directories:
-    - /home/travis/.ccache/
-    - /home/travis/.centos-ccache/
-    - /home/travis/.alpine-ccache/
+    - /home/travis/.cache/ccache
+    - /home/travis/Library/Caches/ccache
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - export PATH="/usr/local/opt/ccache/libexec:$PATH"
