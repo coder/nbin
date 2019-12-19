@@ -40,9 +40,11 @@ describe("bundler", () => {
   })
 
   it("should error if running raw binary", async () => {
+    // TODO: If possible we could try to detect if anything has been bundled yet
+    // and display an appropriate message.
     assert.rejects(async () => {
       await util.promisify(cp.exec)(nodePath)
-    }, /ERR_BUFFER_OUT_OF_BOUNDS/)
+    }, /ERR/) // out of bounds or out of range
   })
 
   it("should compile binary and execute it", async () => {
