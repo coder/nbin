@@ -32,16 +32,8 @@ function docker-build() {
       docker-exec "cross-build-end"
       ;;
     *centos*)
-      # `__STDC_FORMAT_MACROS` is required on some older systems for access to
-      # some macros used by Node like `PRIx64`. In newer versions of Node this
-      # will already be set and we can remove it here.
-      local cpp_flags="-D __STDC_FORMAT_MACROS"
-
-      # `-lrt` provides clock_*; required for gcc < 2.17 (in 2.17 they became
-      # part of the main C library).
-      local ld_flags="-lrt"
-
-      docker-exec-build ". /opt/rh/devtoolset-6/enable && . /opt/rh/python27/enable && CPPFLAGS='$cpp_flags' LDFLAGS='$ld_flags'"
+      docker-exec-build ". /opt/rh/devtoolset-6/enable &&"
+      docker-exec "cd /src && npm rebuild" # So the native module works.
       ;;
     *)
       docker-exec-build
