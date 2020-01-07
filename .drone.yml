@@ -1,17 +1,16 @@
 # Drone CI Pipeline for nbin
 
-## AMD64 Pipeline - Master Build Test
+## AMD64 Pipeline - Build Test
 kind: pipeline
 type: docker
-name: build-master-amd64
+name: build-amd64
 
 platform:
   arch: amd64
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:amd64
+  image: codercom/drone-volume-cache:amd64
   volumes:
   - name: ccache-amd64
     path: /cache
@@ -29,7 +28,7 @@ steps:
     - yarn test
 
 - name: rebuild-cache
-  image: chinodesuuu/drone-volume-cache:amd64
+  image: codercom/drone-volume-cache:amd64
   volumes:
   - name: ccache-amd64
     path: /cache
@@ -39,18 +38,17 @@ steps:
       - /root/.cache/ccache
 
 ---
-## ARM64 - Master Build Test
+## ARM64 - Build Test
 kind: pipeline
 type: docker
-name: build-master-arm64
+name: build-arm64
 
 platform:
   arch: arm64
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:arm64
+  image: codercom/drone-volume-cache:arm64
   volumes:
   - name: ccache-arm64
     path: /cache
@@ -68,7 +66,7 @@ steps:
     - yarn test
 
 - name: rebuild-cache
-  image: chinodesuuu/drone-volume-cache:arm64
+  image: codercom/drone-volume-cache:arm64
   volumes:
   - name: ccache-arm64
     path: /cache
@@ -78,18 +76,17 @@ steps:
       - /root/.cache/ccache
 
 ---
-## ARM - Master Build Test
+## ARM - Build Test
 kind: pipeline
 type: docker
-name: build-master-arm
+name: build-arm
 
 platform:
   arch: arm
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:arm
+  image: codercom/drone-volume-cache:arm
   volumes:
   - name: ccache-arm
     path: /cache
@@ -107,7 +104,7 @@ steps:
     - yarn test
 
 - name: rebuild-cache
-  image: chinodesuuu/drone-volume-cache:arm
+  image: codercom/drone-volume-cache:arm
   volumes:
   - name: ccache-arm
     path: /cache
@@ -116,20 +113,18 @@ steps:
     mount:
       - /root/.cache/ccache
 
-
 ---
 ## AMD64 - Release
 kind: pipeline
 type: docker
-name: rel-amd64
+name: release-amd64
 
 platform:
   arch: amd64
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:amd64
+  image: codercom/drone-volume-cache:amd64
   volumes:
   - name: ccache-amd64
     path: /cache
@@ -155,8 +150,6 @@ steps:
        from_secret: gcs-token
 
 trigger:
-  branch:
-  - master
   event:
   - tag
 
@@ -164,15 +157,14 @@ trigger:
 ## ARM64 - Release
 kind: pipeline
 type: docker
-name: rel-arm64
+name: release-arm64
 
 platform:
   arch: arm64
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:arm64
+  image: codercom/drone-volume-cache:arm64
   volumes:
   - name: ccache-arm64
     path: /cache
@@ -198,8 +190,6 @@ steps:
        from_secret: gcs-token
 
 trigger:
-  branch:
-  - master
   event:
   - tag
 
@@ -207,15 +197,14 @@ trigger:
 ## ARM - Release
 kind: pipeline
 type: docker
-name: rel-arm
+name: release-arm
 
 platform:
   arch: arm
 
 steps:
-
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache:arm
+  image: codercom/drone-volume-cache:arm
   volumes:
   - name: ccache-arm
     path: /cache
@@ -241,7 +230,5 @@ steps:
        from_secret: gcs-token
 
 trigger:
-  branch:
-  - master
   event:
   - tag

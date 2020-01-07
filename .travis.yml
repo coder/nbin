@@ -46,5 +46,5 @@ deploy:
   skip_cleanup: true
   local-dir: build
   on:
-    branch: master
+    tags: true
     repo: cdr/nbin
