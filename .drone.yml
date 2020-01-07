@@ -10,12 +10,32 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-amd64
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-amd64
+    path: /root/.cache/ccache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
 
 ---
 ## ARM64 - Master Build Test
@@ -28,12 +48,32 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm64
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm64
+    path: /root/.cache/ccache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
 
 ---
 ## ARM - Master Build Test
@@ -46,12 +86,32 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm
+    path: /root/.cache/ccache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
 
 ---
 ## AMD64 - Release
@@ -63,6 +123,16 @@ platform:
   arch: amd64
 
 steps:
+
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-amd64
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
 
 - name: build
   image: node:10
@@ -96,6 +166,16 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm64
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
@@ -127,6 +207,16 @@ platform:
   arch: arm
 
 steps:
+
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: ccache-arm
+    path: /root/.cache/ccache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
 
 - name: build
   image: node:10
