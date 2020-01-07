@@ -3,21 +3,6 @@
 
 set -Eeuo pipefail
 
-ARCH=
-case "$(uname -m)" in
-   x86_64)
-     ARCH="x64"
-     ;;
-   aarch64)
-     ARCH="arm64"
-     ;;
-    armv7l)
-     ARCH="armv7"
-     ;;
-    *)
-     echo "Unsupported arch!" && exit 3
-     ;;
-esac
 
 function main() {
   cd "$(dirname "$0")/../lib/node"
@@ -48,7 +33,6 @@ function main() {
   echo "cores: $cores"
 
   ./configure \
-    --dest-cpu="$ARCH" \
     --link-module ./lib/nbin.js \
     --link-module ./lib/_third_party_main.js \
     --openssl-no-asm --openssl-use-def-ca-store
