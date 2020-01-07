@@ -21,7 +21,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -60,7 +60,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -99,7 +99,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -139,7 +139,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -182,7 +182,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -225,7 +225,7 @@ steps:
       - /root/.cache/ccache
 
 - name: build
-  image: node:10
+  image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
