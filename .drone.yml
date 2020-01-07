@@ -11,7 +11,7 @@ platform:
 steps:
 
 - name: restore-cache
-  image: drillster/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:amd64
   volumes:
   - name: ccache-amd64
     path: /cache
@@ -26,9 +26,10 @@ steps:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: rebuild-cache
-  image: drillster/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:amd64
   volumes:
   - name: ccache-amd64
     path: /cache
@@ -49,7 +50,7 @@ platform:
 steps:
 
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:arm64
   volumes:
   - name: ccache-arm64
     path: /cache
@@ -64,9 +65,10 @@ steps:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: rebuild-cache
-  image: chinodesuuu/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:arm64
   volumes:
   - name: ccache-arm64
     path: /cache
@@ -87,7 +89,7 @@ platform:
 steps:
 
 - name: restore-cache
-  image: chinodesuuu/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:arm
   volumes:
   - name: ccache-arm
     path: /cache
@@ -102,9 +104,10 @@ steps:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: rebuild-cache
-  image: chinodesuuu/drone-volume-cache
+  image: chinodesuuu/drone-volume-cache:arm
   volumes:
   - name: ccache-arm
     path: /cache
@@ -125,12 +128,23 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: deploy
   image: plugins/gcs
@@ -157,12 +171,23 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: deploy
   image: plugins/gcs
@@ -189,12 +214,23 @@ platform:
 
 steps:
 
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
 - name: build
   image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
     - yarn build
+    - yarn test
 
 - name: deploy
   image: plugins/gcs
