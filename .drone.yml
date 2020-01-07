@@ -1,0 +1,247 @@
+# Drone CI Pipeline for nbin
+
+## AMD64 Pipeline - Master Build Test
+kind: pipeline
+type: docker
+name: build-master-amd64
+
+platform:
+  arch: amd64
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: rebuild-cache
+  image: chinodesuuu/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+---
+## ARM64 - Master Build Test
+kind: pipeline
+type: docker
+name: build-master-arm64
+
+platform:
+  arch: arm64
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: rebuild-cache
+  image: chinodesuuu/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+---
+## ARM - Master Build Test
+kind: pipeline
+type: docker
+name: build-master-arm
+
+platform:
+  arch: arm
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: rebuild-cache
+  image: chinodesuuu/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+
+---
+## AMD64 - Release
+kind: pipeline
+type: docker
+name: rel-amd64
+
+platform:
+  arch: amd64
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
+
+---
+## ARM64 - Release
+kind: pipeline
+type: docker
+name: rel-arm64
+
+platform:
+  arch: arm64
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
+
+---
+## ARM - Release
+kind: pipeline
+type: docker
+name: rel-arm
+
+platform:
+  arch: arm
+
+steps:
+
+- name: restore-cache
+  image: chinodesuuu/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - yarn build
+    - yarn test
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
