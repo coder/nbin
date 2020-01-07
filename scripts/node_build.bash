@@ -12,9 +12,8 @@ function main() {
 
   cp ../../out/patches/thirdPartyMain.js ./lib/_third_party_main.js
 
-  if ! yarn patch:apply 2> /dev/null ; then
+  if ! git apply ../../scripts/node.patch ; then
     echo "Failed to patch; assuming already patched"
-    git status
   fi
 
   local -i cores=2

@@ -5,7 +5,6 @@ set -Eeuo pipefail
 
 function docker-build() {
   local image="$1" ; shift
-  local prebuild_command="$1" ; shift
 
   local cache="$HOME/.cache"
   if [[ -n ${XDG_CACHE_HOME:-} ]] ; then
@@ -22,26 +21,40 @@ function docker-build() {
     docker exec "$containerId" bash -c "$@"
   }
 
-  [[ -n $prebuild_command ]] && docker-exec "$prebuild_command"
+  function docker-exec-build() {
+    docker-exec "cd /src && ${1:-} ./scripts/node_build.bash"
+  }
 
   case $image in
     *armv7hf* | *aarch64*)
       docker-exec "cross-build-start"
-      docker-exec "cd /src && yarn build"
-      docker-exec "cd /src && yarn test"
+      docker-exec-build
       docker-exec "cross-build-end"
       ;;
+    *centos*)
+      # `__STDC_FORMAT_MACROS` is required on some older systems for access to
+      # some macros used by Node like `PRIx64`. In newer versions of Node this
+      # will already be set and we can remove it here.
+      local cpp_flags="-D __STDC_FORMAT_MACROS"
+
+      # `-lrt` provides clock_*; required for gcc < 2.17 (in 2.17 they became
+      # part of the main C library).
+      local ld_flags="-lrt"
+
+      docker-exec-build ". /opt/rh/devtoolset-6/enable && . /opt/rh/python27/enable && CPPFLAGS='$cpp_flags' LDFLAGS='$ld_flags'"
+      ;;
     *)
-      docker-exec "cd /src && yarn build"
-      docker-exec "cd /src && yarn test"
+      docker-exec-build
       ;;
   esac
+
+  docker-exec "cd /src && ./node_modules/.bin/mocha"
 
   docker kill "$containerId"
 }
 
 function mac-build() {
-  yarn build
+  yarn build:node
   yarn test
 }
 
@@ -52,21 +65,22 @@ function main() {
   local version
   version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
+  yarn build:nbin
+  yarn build:bundle
+
   local binary_name="node-$node_version-${TARGET:-darwin}"
   if [[ $OSTYPE == "darwin"* ]]; then
     binary_name="$binary_name-x86_64"
     mac-build
   else
     local image="codercom/nbin-$TARGET"
-    local prebuild_command=""
     case $TARGET in
       "alpine") binary_name="$binary_name-x86_64" ;;
       "centos")
-        prebuild_command="source /opt/rh/devtoolset-6/enable"
         binary_name="$binary_name-x86_64"
         ;;
     esac
-    docker-build "$image" "$prebuild_command"
+    docker-build "$image"
   fi
 
   mkdir -p "./build/$version"
