@@ -11,7 +11,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -29,7 +29,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -47,7 +47,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -65,7 +65,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -97,7 +97,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
@@ -129,7 +129,7 @@ platform:
 steps:
 
 - name: build
-  image: ubuntu
+  image: node:10
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
