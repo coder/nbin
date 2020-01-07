@@ -1,0 +1,144 @@
+# Drone CI Pipeline for nbin
+
+## AMD64 Pipeline - Master Build Test
+kind: pipeline
+type: docker
+
+platform:
+  arch: amd64
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+---
+## ARM64 - Master Build Test
+kind: pipeline
+type: docker
+
+platform:
+  arch: arm64
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+---
+## ARM - Master Build Test
+kind: pipeline
+type: docker
+
+platform:
+  arch: arm
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+---
+## AMD64 - Release
+kind: pipeline
+type: docker
+
+platform:
+  arch: amd64
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
+
+---
+## ARM64 - Release
+kind: pipeline
+type: docker
+
+platform:
+  arch: arm64
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
+
+---
+## ARM - Release
+kind: pipeline
+type: docker
+
+platform:
+  arch: arm
+
+stpes:
+
+- name: build
+  image: ubuntu
+  commands:
+    - sudo apt update && sudo apt install -y build-essential ccache
+    - yarn
+    - yarn build
+
+- name: deploy
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+
+trigger:
+  branch:
+  - master
+  event:
+  - tag
