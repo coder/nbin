@@ -1,4 +1,3 @@
-import { Binary } from "./bundler";
+import { Binary } from "./bundler"
 
-export { Binary };
-
+export { Binary }

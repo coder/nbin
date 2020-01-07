@@ -1,32 +1,34 @@
 language: node_js
 osx_image: xcode10.2
 node_js:
-- 10.15.1
+- 12.14.0
 services:
 - docker
+git:
+  depth: 3
+  submodules_depth: 3
 cache:
   directories:
-    - /home/travis/.ccache/
-    - /home/travis/.centos-ccache/
-    - /home/travis/.alpine-ccache/
+    - /home/travis/.cache/ccache
+    - /Users/travis/Library/Caches/ccache
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - export PATH="/usr/local/opt/ccache/libexec:$PATH"
   - eval "$(MATRIX_EVAL)"
 matrix:
   include:
-  - os: linux
-    env:
-      - TARGET="alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="armv7hf-alpine"
   # - os: linux
   #   env:
   #     - TARGET="aarch64-alpine"
   # - os: linux
   #   env:
   #     - TARGET="aarch64"
+  - os: linux
+    env:
+      - TARGET="alpine"
+  # - os: linux
+    # env:
+    #   - TARGET="armv7hf-alpine"
   # - os: linux
   #   env:
   #     - TARGET="armv7hf"
@@ -34,7 +36,7 @@ matrix:
     env:
       - TARGET="centos"
   - os: osx
-script: scripts/ci.sh
+script: scripts/ci.bash
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM

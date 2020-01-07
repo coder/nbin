@@ -11,11 +11,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "nbin": ["./typings/internal.d.ts"],
-      "@coder/nbin": ["./typings/external.d.ts"]
+      "nbin": ["../typings/internal.d.ts"]
     }
-  },
-  "include": [
-    "./src"
-  ]
+  }
 }

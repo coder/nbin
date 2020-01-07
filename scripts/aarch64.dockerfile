@@ -1,4 +1,4 @@
-FROM balenalib/aarch64-debian-node:10.15-jessie-build
+FROM balenalib/aarch64-debian-node:12.14-jessie-build
 
 RUN ["cross-build-start"]
 

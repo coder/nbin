@@ -1,55 +1,51 @@
 {
-	"name": "@coder/nbin",
-	"version": "1.2.3",
-	"description": "Fast and robust node.js binary compiler.",
-	"main": "out/api.js",
-	"scripts": {
-		"prepare": "./scripts/webpack_build.sh",
-		"test": "node node_modules/.bin/jest"
-	},
-	"typings": "typings/nbin.d.ts",
-	"author": "Coder",
-	"license": "MIT",
-	"devDependencies": {
-		"@types/fs-extra": "^5.0.5",
-		"@types/glob": "^7.1.1",
-		"@types/jest": "^24.0.11",
-		"@types/node": "^11.11.4",
-		"@types/node-fetch": "^2.1.7",
-		"@types/webpack": "^4.4.26",
-		"happypack": "^5.0.1",
-		"jest": "^24.5.0",
-		"node-loader": "^0.6.0",
-		"node-pty": "^0.8.1",
-		"string-replace-loader": "^2.1.1",
-		"ts-jest": "^24.0.0",
-		"ts-loader": "^5.3.3",
-		"typescript": "^3.3.4000",
-		"webpack": "^4.29.6",
-		"webpack-cli": "^3.3.3",
-		"webpack-dev-server": "^3.2.1"
-	},
-	"jest": {
-		"moduleFileExtensions": [
-			"ts",
-			"tsx",
-			"js",
-			"json"
-		],
-		"transform": {
-			"^.+\\.tsx?$": "ts-jest"
-		},
-		"testPathIgnorePatterns": [
-			"/node_modules/",
-			"<rootDir>/node/test"
-		],
-		"testRegex": "src/.*\\.test\\.tsx?"
-	},
-	"dependencies": {
-		"@coder/logger": "^1.1.8",
-		"fs-extra": "^7.0.1",
-		"glob": "^7.1.3",
-		"node-fetch": "^2.3.0",
-		"ora": "^3.2.0"
-	}
+  "name": "@coder/nbin",
+  "version": "1.2.6",
+  "description": "Fast and robust node.js binary compiler.",
+  "main": "out/api/index.js",
+  "scripts": {
+    "prepublish": "./scripts/preinstall.bash",
+    "prepublishOnly": "yarn build && yarn test",
+    "test": "mocha",
+    "coverage": "nyc mocha",
+    "lint": "eslint src test typings --ext .ts",
+    "build:docker": "./scripts/docker.bash",
+    "build:bundle": "browserify --node --no-bundle-external ./out/patches/nbin.js --standalone nbin --outfile ./lib/node/lib/nbin.js",
+    "build:nbin": "tsc",
+    "build:node": "./scripts/node_build.bash",
+    "build": "yarn build:nbin && yarn build:bundle && yarn build:node",
+    "patch:generate": "cd ./lib/node && git diff HEAD > ../../scripts/node.patch",
+    "patch:apply": "cd ./lib/node && git apply ../../scripts/node.patch"
+  },
+  "typings": "typings/nbin.d.ts",
+  "author": "Coder",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/fs-extra": "^5.0.5",
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^11.11.4",
+    "@types/node-fetch": "^2.1.7",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
+    "eslint": "^6.2.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.0",
+    "mocha": "^6.2.0",
+    "node-pty": "^0.9.0",
+    "nyc": "^14.1.1",
+    "prettier": "^1.18.2",
+    "source-map-support": "^0.5.16",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.7.3"
+  },
+  "dependencies": {
+    "@coder/logger": "^1.1.8",
+    "browserify": "^16.5.0",
+    "fs-extra": "^7.0.1",
+    "glob": "^7.1.3",
+    "node-fetch": "^2.3.0",
+    "ora": "^3.2.0"
+  }
 }
