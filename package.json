@@ -1,10 +1,11 @@
 {
   "name": "@coder/nbin",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Fast and robust node.js binary compiler.",
   "main": "out/api/index.js",
   "scripts": {
-    "preinstall": "./scripts/preinstall.bash",
+    "prepublish": "./scripts/preinstall.bash",
+    "prepublishOnly": "yarn build && yarn test",
     "test": "mocha",
     "coverage": "nyc mocha",
     "lint": "eslint src test typings --ext .ts",
