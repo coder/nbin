@@ -3,11 +3,12 @@
 ## AMD64 Pipeline - Master Build Test
 kind: pipeline
 type: docker
+name: build-master-amd64
 
 platform:
   arch: amd64
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
@@ -20,11 +21,12 @@ stpes:
 ## ARM64 - Master Build Test
 kind: pipeline
 type: docker
+name: build-master-arm64
 
 platform:
   arch: arm64
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
@@ -37,11 +39,12 @@ stpes:
 ## ARM - Master Build Test
 kind: pipeline
 type: docker
+name: build-master-arm
 
 platform:
   arch: arm
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
@@ -54,11 +57,12 @@ stpes:
 ## AMD64 - Release
 kind: pipeline
 type: docker
+name: rel-amd64
 
 platform:
   arch: amd64
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
@@ -85,11 +89,12 @@ trigger:
 ## ARM64 - Release
 kind: pipeline
 type: docker
+name: rel-arm64
 
 platform:
   arch: arm64
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
@@ -116,11 +121,12 @@ trigger:
 ## ARM - Release
 kind: pipeline
 type: docker
+name: rel-arm
 
 platform:
   arch: arm
 
-stpes:
+steps:
 
 - name: build
   image: ubuntu
