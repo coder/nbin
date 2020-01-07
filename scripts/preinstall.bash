@@ -13,13 +13,10 @@ function main() {
     git submodule update --recursive --init
 
     # Ensure Node has been cloned.
-    if [[ ! -f ./lib/Node/.git ]] ; then
+    if [[ ! -f ./lib/node/.git ]] ; then
       >&2 echo "Unable to pull Node submodule"; exit 1
     fi
   fi
-
-  # TODO: Messes with tests?
-  # rm lib/node/test/fixtures/packages/unparseable/package.json
 }
 
 main "$@"
