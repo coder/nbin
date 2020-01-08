@@ -77,6 +77,13 @@ function main() {
 
   mkdir -p "./build/$version"
   cp ./lib/node/node "./build/$version/$binary_name"
+
+  echo "Copied binary to ./build/$version/$binary_name"
+
+  # To aid in debugging the CI.
+  pwd && ls -l && echo
+  echo "$(pwd)/build" && ls -l ./build && echo
+  echo "$(pwd)/build/$version" && ls -l "./build/$version" && echo
 }
 
 main "$@"
