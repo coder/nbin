@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# travis.bash -- Build from Travis.
+# travis.bash -- Build from CI.
 
 set -Eeuo pipefail
 
@@ -45,7 +45,7 @@ function docker-build() {
   docker kill "$containerId"
 }
 
-function mac-build() {
+function local-build() {
   yarn build:node
   yarn test
 }
@@ -60,20 +60,16 @@ function main() {
   yarn build:nbin
   yarn build:bundle
 
-  local binary_name="node-$node_version-${TARGET:-darwin}"
-  if [[ $OSTYPE == "darwin"* ]]; then
-    binary_name="$binary_name-x86_64"
-    mac-build
-  else
-    local image="codercom/nbin-$TARGET"
-    case $TARGET in
-      "alpine") binary_name="$binary_name-x86_64" ;;
-      "centos")
-        binary_name="node-$node_version-linux-x86_64"
-        ;;
-    esac
-    docker-build "$image"
-  fi
+  local binary_name="node-$node_version-$TARGET"
+  case $TARGET in
+   "alpine"|"darwin") binary_name="$binary_name-x86_64" ;;
+   "centos"         ) binary_name="node-$node_version-linux-x86_64" ;;
+  esac
+
+  case $TARGET in
+    "alpine"|"centos") docker-build "codercom/nbin-$TARGET" ;;
+    *                ) local-build ;;
+  esac
 
   mkdir -p "./build/$version"
   cp ./lib/node/node "./build/$version/$binary_name"

@@ -24,6 +24,8 @@ matrix:
     env:
       - TARGET="centos"
   - os: osx
+    env:
+      - TARGET="darwin"
 script: scripts/travis.bash
 deploy:
   provider: gcs

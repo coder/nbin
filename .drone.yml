@@ -24,9 +24,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=amd64 ./scripts/ci.bash
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:amd64
@@ -68,9 +66,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=arm64 ./scripts/ci.bash
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:arm64
@@ -112,9 +108,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=arm ./scripts/ci.bash
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:arm
@@ -156,9 +150,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=amd64 ./scripts/ci.bash
 
 - name: deploy
   image: plugins/gcs
@@ -197,9 +189,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=arm64 ./scripts/ci.bash
 
 - name: deploy
   image: plugins/gcs
@@ -238,9 +228,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - yarn build
-    - yarn test
-    - yarn verify
+    - TARGET=arm ./scripts/ci.bash
 
 - name: deploy
   image: plugins/gcs
