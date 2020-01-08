@@ -121,7 +121,7 @@ index 64505220ab..da14bb6327 100644
  
  Module._extensions['.mjs'] = function(module, filename) {
 diff --git a/src/node.cc b/src/node.cc
-index ae53d0c31c..c6fa2b5208 100644
+index ae53d0c31c..f670f2ca17 100644
 --- a/src/node.cc
 +++ b/src/node.cc
 @@ -411,7 +411,8 @@ MaybeLocal<Value> StartMainThreadExecution(Environment* env) {
@@ -133,4 +133,15 @@ index ae53d0c31c..c6fa2b5208 100644
 +  if (!getenv("NBIN_BYPASS") && NativeModuleEnv::Exists("_third_party_main")) {
      return StartExecution(env, "internal/main/run_third_party_main");
    }
+ 
+@@ -660,6 +661,10 @@ int ProcessGlobalArgs(std::vector<std::string>* args,
+                       std::vector<std::string>* exec_args,
+                       std::vector<std::string>* errors,
+                       bool is_env) {
++  if (!getenv("NBIN_BYPASS") && !is_env) {
++    return 0;
++  }
++
+   // Parse a few arguments which are specific to Node.
+   std::vector<std::string> v8_args;
  
