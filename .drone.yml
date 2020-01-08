@@ -26,6 +26,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:amd64
@@ -69,6 +70,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:arm64
@@ -112,6 +114,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: rebuild-cache
   image: codercom/drone-volume-cache:arm
@@ -155,6 +158,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: deploy
   image: plugins/gcs
@@ -195,6 +199,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: deploy
   image: plugins/gcs
@@ -235,6 +240,7 @@ steps:
     - yarn
     - yarn build
     - yarn test
+    - yarn verify
 
 - name: deploy
   image: plugins/gcs
