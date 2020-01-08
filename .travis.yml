@@ -19,13 +19,11 @@ matrix:
   include:
   - os: linux
     env:
-      - TARGET="alpine"
+      - PLATFORM="alpine"
   - os: linux
-    env:
-      - TARGET="centos"
   - os: osx
     env:
-      - TARGET="darwin"
+      - PLATFORM="darwin"
 script: scripts/ci.bash
 deploy:
   provider: gcs

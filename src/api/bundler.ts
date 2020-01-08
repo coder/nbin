@@ -85,7 +85,7 @@ export class Binary implements nbin.Binary {
   public async build(): Promise<Buffer> {
     const nodeBuffer = await this.cacheBinary()
 
-    // Create a buffer containing a (most likely) unique ID and its length.
+    // Create a buffer containing the version and its length.
     const version = this.version
     const versionBuffer = Buffer.alloc(2 + Buffer.byteLength(version))
     writeString(versionBuffer, version)

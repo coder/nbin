@@ -60,14 +60,13 @@ function main() {
   yarn build:nbin
   yarn build:bundle
 
-  local binary_name="node-$node_version-$TARGET"
-  case $TARGET in
-   "alpine"|"darwin") binary_name="$binary_name-x86_64" ;;
-   "centos"         ) binary_name="node-$node_version-linux-x86_64" ;;
-  esac
+  local platform="${PLATFORM:-linux}"
+  local arch="${ARCH:-x86_64}"
+  local binary_name="node-$node_version-$platform-$arch"
+  echo "Building $binary_name"
 
-  case $TARGET in
-    "alpine"|"centos") docker-build "codercom/nbin-$TARGET" ;;
+  case $platform in
+    "alpine"|"centos") docker-build "codercom/nbin-$platform" ;;
     *                ) local-build ;;
   esac
 
