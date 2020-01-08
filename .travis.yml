@@ -26,7 +26,7 @@ matrix:
   - os: osx
     env:
       - TARGET="darwin"
-script: scripts/travis.bash
+script: scripts/ci.bash
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM
