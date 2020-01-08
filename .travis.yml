@@ -24,7 +24,7 @@ matrix:
     env:
       - TARGET="centos"
   - os: osx
-script: scripts/ci.bash
+script: scripts/travis.bash
 deploy:
   provider: gcs
   access_key_id: GOOGZVNTORC5JOVTMMRVCXAM

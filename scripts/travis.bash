@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ci.bash -- Build from CI.
+# travis.bash -- Build from Travis.
 
 set -Eeuo pipefail
 
