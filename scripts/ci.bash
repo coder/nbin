@@ -69,7 +69,7 @@ function main() {
     case $TARGET in
       "alpine") binary_name="$binary_name-x86_64" ;;
       "centos")
-        binary_name="$binary_name-x86_64"
+        binary_name="node-$node_version-linux-x86_64"
         ;;
     esac
     docker-build "$image"
