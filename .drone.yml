@@ -37,6 +37,11 @@ steps:
     mount:
       - /root/.cache/ccache
 
+trigger:
+  event:
+    exclude:
+    - tag
+
 ---
 ## ARM64 - Build Test
 kind: pipeline
@@ -75,6 +80,11 @@ steps:
     mount:
       - /root/.cache/ccache
 
+trigger:
+  event:
+    exclude:
+    - tag
+
 ---
 ## ARM - Build Test
 kind: pipeline
@@ -112,6 +122,11 @@ steps:
     rebuild: true
     mount:
       - /root/.cache/ccache
+
+trigger:
+  event:
+    exclude:
+    - tag
 
 ---
 ## AMD64 - Release
