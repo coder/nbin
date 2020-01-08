@@ -53,7 +53,6 @@ function local-build() {
 function main() {
   cd "$(dirname "$0")/.."
 
-  local node_version=12.14.0
   local version
   version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
@@ -62,13 +61,16 @@ function main() {
 
   local platform="${PLATFORM:-linux}"
   local arch="${ARCH:-x86_64}"
-  local binary_name="node-$node_version-$platform-$arch"
-  echo "Building $binary_name"
+  echo "Building $platform-$arch"
 
   case $platform in
     "alpine"|"centos") docker-build "codercom/nbin-$platform" ;;
     *                ) local-build ;;
   esac
+
+  local node_version
+  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
+  local binary_name="node-$node_version-$platform-$arch"
 
   mkdir -p "./build/$version"
   cp ./lib/node/node "./build/$version/$binary_name"
