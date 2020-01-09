@@ -13,6 +13,11 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
+- name: test
+  image: node:12
+  commands:
+    - yarn test
+
 - name: upload
   image: plugins/gcs
   settings:
@@ -38,6 +43,11 @@ steps:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
     - ./scripts/ci.bash
+
+- name: test
+  image: node:12-alpine
+  commands:
+    - yarn test
 
 - name: upload
   image: plugins/gcs
@@ -65,6 +75,11 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
+- name: test
+  image: node:12
+  commands:
+    - yarn test
+
 - name: upload
   image: plugins/gcs
   settings:
@@ -90,6 +105,11 @@ steps:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
     - ./scripts/ci.bash
+
+- name: test
+  image: node:12-alpine
+  commands:
+    - yarn test
 
 - name: upload
   image: plugins/gcs
@@ -117,6 +137,11 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
+- name: test
+  image: node:12
+  commands:
+    - yarn test
+
 - name: upload
   image: plugins/gcs
   settings:
@@ -142,6 +167,11 @@ steps:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
     - ./scripts/ci.bash
+
+- name: test
+  image: node:12-alpine
+  commands:
+    - yarn test
 
 - name: upload
   image: plugins/gcs

@@ -33,7 +33,6 @@ function main() {
 
   echo "Building $platform-$arch"
   yarn build
-  yarn test
 
   local node_version
   node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
