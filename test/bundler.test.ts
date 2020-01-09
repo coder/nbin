@@ -168,7 +168,7 @@ describe("bundler", () => {
     })
   }
 
-  it("should fill fs and propogate errors", async () => {
+  it("should fill fs and propagate errors", async () => {
     const mainFile = "/example.js"
     const exampleContent = (stdout: string): void => {
       const fs = require("fs") as typeof import("fs")

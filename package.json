@@ -7,7 +7,6 @@
     "prepublish": "./scripts/preinstall.bash",
     "prepublishOnly": "yarn build && yarn test",
     "test": "mocha",
-    "verify": "pwd && tree ./build || ls -l ./build",
     "coverage": "nyc mocha",
     "lint": "eslint src test typings --ext .ts",
     "build:docker": "./scripts/docker.bash",
