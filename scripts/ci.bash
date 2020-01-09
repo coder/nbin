@@ -3,68 +3,47 @@
 
 set -Eeuo pipefail
 
-function docker-build() {
-  local image="$1" ; shift
-
-  local cache="$HOME/.cache"
-  if [[ -n ${XDG_CACHE_HOME:-} ]] ; then
-    cache="$XDG_CACHE_HOME"
-  elif [[ $OSTYPE == "darwin"* ]]; then
-    cache="$HOME/Library/Caches"
-  fi
-
-  local containerId
-  containerId=$(docker create --network=host --rm -it -v "$(pwd)":/src -v "$cache/ccache/$image:/root/.cache/ccache" "$image")
-  docker start "$containerId"
-
-  function docker-exec() {
-    docker exec "$containerId" bash -c "$@"
-  }
-
-  docker-exec "cd /src && ./scripts/node_build.bash"
-  docker-exec "cd /src && ./node_modules/.bin/mocha"
-
-  node_version=$(docker-exec "NBIN_BYPASS=true /src/lib/node/node --version | sed 's/^v//'")
-
-  docker kill "$containerId"
-}
-
-function local-build() {
-  yarn build:node
-  yarn test
-  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
+function copy-binary() {
+  binary_name="node-$node_version-$platform-$1"
+  mkdir -p "./build/$nbin_version"
+  cp ./lib/node/node "./build/$nbin_version/$binary_name"
+  echo "Copied binary to ./build/$nbin_version/$binary_name"
 }
 
 function main() {
   cd "$(dirname "$0")/.."
 
-  local version
-  version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+  local nbin_version
+  nbin_version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
-  yarn build:nbin
-  yarn build:bundle
+  local arch="amd64"
+  local platform="linux"
+	if [[ ${OSTYPE:-} == darwin* ]] ; then
+		platform="darwin"
+	else
+		# On Alpine there seems no way to get the version except to use an invalid
+		# command which will output the version to stderr and exit with 1.
+		local output
+		output=$(ldd --version 2>&1 || :)
+		if [[ $output == musl* ]] ; then
+			platform="alpine"
+ 		fi
+    arch=$(uname -m)
+ 	fi
 
-  local node_version="unknown"
-  local platform="${PLATFORM:-linux}"
-  local arch="${ARCH:-x86_64}"
   echo "Building $platform-$arch"
+  yarn build
+  yarn test
 
-  case $platform in
-    "alpine") docker-build "codercom/nbin-$platform" ;;
-    *       ) local-build ;;
+  local node_version
+  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
+
+  case $arch in
+    "amd64"|"x86_64") copy-binary "x86_64" ;;
+    "aarch64"       ) copy-binary "arm64"  ;;
+    "armv8l"        ) copy-binary "arm"    ;;
+    *               ) copy-binary "$arch"  ;;
   esac
-
-  mkdir -p "./build/$version"
-  function copy-binary() {
-    binary_name=$1
-    cp ./lib/node/node "./build/$version/$binary_name"
-    echo "Copied binary to ./build/$version/$binary_name"
-  }
-
-  copy-binary "node-$node_version-$platform-$arch"
-  if [[ $arch == "amd64" ]] ; then
-    copy-binary "node-$node_version-$platform-x86_64"
-  fi
 }
 
 main "$@"

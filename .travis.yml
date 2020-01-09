@@ -9,7 +9,6 @@ git:
   submodules_depth: 3
 cache:
   directories:
-    - /home/travis/.cache/ccache
     - /Users/travis/Library/Caches/ccache
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
@@ -17,12 +16,7 @@ before_install:
   - eval "$(MATRIX_EVAL)"
 matrix:
   include:
-  - os: linux
-    env:
-      - PLATFORM="alpine"
   - os: osx
-    env:
-      - PLATFORM="darwin"
 script: scripts/ci.bash
 deploy:
   provider: gcs

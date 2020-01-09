@@ -1,37 +1,17 @@
 kind: pipeline
 type: docker
-name: build-amd64
+name: amd64:linux
 
 platform:
   arch: amd64
 
 steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:amd64
-  volumes:
-  - name: ccache-amd64
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
 - name: build
   image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ARCH=amd64 ./scripts/ci.bash
-
-- name: rebuild-cache
-  image: codercom/drone-volume-cache:amd64
-  volumes:
-  - name: ccache-amd64
-    path: /cache
-  settings:
-    rebuild: true
-    mount:
-      - /root/.cache/ccache
+    - ./scripts/ci.bash
 
 - name: upload
   image: plugins/gcs
@@ -46,38 +26,44 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: build-arm64
+name: amd64:alpine
+
+platform:
+  arch: amd64
+
+steps:
+- name: build
+  image: node:12-alpine
+  commands:
+    - apk add bash gcc g++ ccache git make python linux-headers
+    - yarn
+    - ./scripts/ci.bash
+
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
+
+---
+kind: pipeline
+type: docker
+name: arm64:linux
 
 platform:
   arch: arm64
 
 steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:arm64
-  volumes:
-  - name: ccache-arm64
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
 - name: build
   image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ARCH=arm64 ./scripts/ci.bash
-
-- name: rebuild-cache
-  image: codercom/drone-volume-cache:arm64
-  volumes:
-  - name: ccache-arm64
-    path: /cache
-  settings:
-    rebuild: true
-    mount:
-      - /root/.cache/ccache
+    - ./scripts/ci.bash
 
 - name: upload
   image: plugins/gcs
@@ -92,38 +78,70 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: build-arm
+name: arm64:alpine
+
+platform:
+  arch: arm64
+
+steps:
+- name: build
+  image: node:12-alpine
+  commands:
+    - apk add bash gcc g++ ccache git make python linux-headers
+    - yarn
+    - ./scripts/ci.bash
+
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
+
+---
+kind: pipeline
+type: docker
+name: arm:linux
 
 platform:
   arch: arm
 
 steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:arm
-  volumes:
-  - name: ccache-arm
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
 - name: build
   image: node:12
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ARCH=arm ./scripts/ci.bash
+    - ./scripts/ci.bash
 
-- name: rebuild-cache
-  image: codercom/drone-volume-cache:arm
-  volumes:
-  - name: ccache-arm
-    path: /cache
+- name: upload
+  image: plugins/gcs
   settings:
-    rebuild: true
-    mount:
-      - /root/.cache/ccache
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
+
+---
+kind: pipeline
+type: docker
+name: arm:alpine
+
+platform:
+  arch: arm
+
+steps:
+- name: build
+  image: node:12-alpine
+  commands:
+    - apk add bash gcc g++ ccache git make python linux-headers
+    - yarn
+    - ./scripts/ci.bash
 
 - name: upload
   image: plugins/gcs
