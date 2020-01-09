@@ -69,11 +69,11 @@ function main() {
   esac
 
   local node_version
-  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
+  node_version=$(NBIN_BYPASS=true ./lib/node/out/Release/node --version | sed 's/^v//')
   local binary_name="node-$node_version-$platform-$arch"
 
   mkdir -p "./build/$version"
-  cp ./lib/node/node "./build/$version/$binary_name"
+  cp ./lib/node/out/Release/node "./build/$version/$binary_name"
 
   echo "Copied binary to ./build/$version/$binary_name"
 
