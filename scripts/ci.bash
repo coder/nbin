@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# travis.bash -- Build from CI.
+# ci.bash -- Build from CI.
 
 set -Eeuo pipefail
 
@@ -18,21 +18,21 @@ function main() {
 
   local arch="amd64"
   local platform="linux"
-	if [[ ${OSTYPE:-} == darwin* ]] ; then
-		platform="darwin"
-	else
-		# On Alpine there seems no way to get the version except to use an invalid
-		# command which will output the version to stderr and exit with 1.
-		local output
-		output=$(ldd --version 2>&1 || :)
-		if [[ $output == musl* ]] ; then
-			platform="alpine"
- 		fi
+  if [[ ${OSTYPE:-} == darwin* ]] ; then
+    platform="darwin"
+  else
+    # On Alpine there seems no way to get the version except to use an invalid
+    # command which will output the version to stderr and exit with 1.
+    local output
+    output=$(ldd --version 2>&1 || :)
+    if [[ $output == musl* ]] ; then
+      platform="alpine"
+    fi
     arch=$(uname -m)
- 	fi
+  fi
 
   echo "Building $platform-$arch"
-  yarn build
+  XDG_CACHE_HOME="$(pwd)/.cache" yarn build
 
   local node_version
   node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')

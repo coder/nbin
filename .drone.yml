@@ -8,10 +8,17 @@ platform:
 steps:
 - name: build
   image: node:12
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache
+    - apt update && apt install -y build-essential ccache python-pip
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12
@@ -39,10 +46,17 @@ platform:
 steps:
 - name: build
   image: node:12-alpine
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers
+    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12-alpine
@@ -70,10 +84,17 @@ platform:
 steps:
 - name: build
   image: node:12
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache
+    - apt update && apt install -y build-essential ccache python-pip
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12
@@ -101,10 +122,17 @@ platform:
 steps:
 - name: build
   image: node:12-alpine
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers
+    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12-alpine
@@ -132,10 +160,17 @@ platform:
 steps:
 - name: build
   image: node:12
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache
+    - apt update && apt install -y build-essential ccache python-pip
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12
@@ -163,10 +198,17 @@ platform:
 steps:
 - name: build
   image: node:12-alpine
+  environment:
+    CLOUDSDK_CORE_PROJECT: coder-production
+    KEY_FILE_CONTENTS:
+      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers
+    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
     - yarn
+    - pip install gsutil
+    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
+    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
 
 - name: test
   image: node:12-alpine
