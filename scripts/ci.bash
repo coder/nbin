@@ -21,25 +21,7 @@ function docker-build() {
     docker exec "$containerId" bash -c "$@"
   }
 
-  function docker-exec-build() {
-    docker-exec "cd /src && ${1:-} ./scripts/node_build.bash"
-  }
-
-  case $image in
-    *armv7hf* | *aarch64*)
-      docker-exec "cross-build-start"
-      docker-exec-build
-      docker-exec "cross-build-end"
-      ;;
-    *centos*)
-      docker-exec-build ". /opt/rh/devtoolset-6/enable &&"
-      docker-exec "cd /src && npm rebuild" # So the native module works.
-      ;;
-    *)
-      docker-exec-build
-      ;;
-  esac
-
+  docker-exec "cd /src && ./scripts/node_build.bash"
   docker-exec "cd /src && ./node_modules/.bin/mocha"
 
   node_version=$(docker-exec "NBIN_BYPASS=true /src/lib/node/node --version | sed 's/^v//'")
@@ -68,16 +50,21 @@ function main() {
   echo "Building $platform-$arch"
 
   case $platform in
-    "alpine"|"centos") docker-build "codercom/nbin-$platform" ;;
-    *                ) local-build ;;
+    "alpine") docker-build "codercom/nbin-$platform" ;;
+    *       ) local-build ;;
   esac
 
-  local binary_name="node-$node_version-$platform-$arch"
-
   mkdir -p "./build/$version"
-  cp ./lib/node/node "./build/$version/$binary_name"
+  function copy-binary() {
+    binary_name=$1
+    cp ./lib/node/node "./build/$version/$binary_name"
+    echo "Copied binary to ./build/$version/$binary_name"
+  }
 
-  echo "Copied binary to ./build/$version/$binary_name"
+  copy-binary "node-$node_version-$platform-$arch"
+  if [[ $arch == "amd64" ]] ; then
+    copy-binary "node-$node_version-$platform-x86_64"
+  fi
 }
 
 main "$@"
