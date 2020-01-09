@@ -1,6 +1,3 @@
-# Drone CI Pipeline for nbin
-
-## AMD64 Pipeline - Build Test
 kind: pipeline
 type: docker
 name: build-amd64
@@ -36,13 +33,17 @@ steps:
     mount:
       - /root/.cache/ccache
 
-trigger:
-  event:
-    exclude:
-    - tag
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
 
 ---
-## ARM64 - Build Test
 kind: pipeline
 type: docker
 name: build-arm64
@@ -78,13 +79,17 @@ steps:
     mount:
       - /root/.cache/ccache
 
-trigger:
-  event:
-    exclude:
-    - tag
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
 
 ---
-## ARM - Build Test
 kind: pipeline
 type: docker
 name: build-arm
@@ -120,124 +125,12 @@ steps:
     mount:
       - /root/.cache/ccache
 
-trigger:
-  event:
-    exclude:
-    - tag
-
----
-## AMD64 - Release
-kind: pipeline
-type: docker
-name: release-amd64
-
-platform:
-  arch: amd64
-
-steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:amd64
-  volumes:
-  - name: ccache-amd64
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
-- name: build
-  image: node:12
-  commands:
-    - apt update && apt install -y build-essential ccache
-    - yarn
-    - ARCH=amd64 ./scripts/ci.bash
-
-- name: deploy
+- name: upload
   image: plugins/gcs
   settings:
      source: build/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
-
-trigger:
-  event:
-  - tag
-
----
-## ARM64 - Release
-kind: pipeline
-type: docker
-name: release-arm64
-
-platform:
-  arch: arm64
-
-steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:arm64
-  volumes:
-  - name: ccache-arm64
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
-- name: build
-  image: node:12
-  commands:
-    - apt update && apt install -y build-essential ccache
-    - yarn
-    - ARCH=arm64 ./scripts/ci.bash
-
-- name: deploy
-  image: plugins/gcs
-  settings:
-     source: build/
-     target: nbin.cdr.sh
-     token:
-       from_secret: gcs-token
-
-trigger:
-  event:
-  - tag
-
----
-## ARM - Release
-kind: pipeline
-type: docker
-name: release-arm
-
-platform:
-  arch: arm
-
-steps:
-- name: restore-cache
-  image: codercom/drone-volume-cache:arm
-  volumes:
-  - name: ccache-arm
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /root/.cache/ccache
-
-- name: build
-  image: node:12
-  commands:
-    - apt update && apt install -y build-essential ccache
-    - yarn
-    - ARCH=arm ./scripts/ci.bash
-
-- name: deploy
-  image: plugins/gcs
-  settings:
-     source: build/
-     target: nbin.cdr.sh
-     token:
-       from_secret: gcs-token
-
-trigger:
-  event:
-  - tag
+  when:
+    event: tag
