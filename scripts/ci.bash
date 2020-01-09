@@ -42,12 +42,15 @@ function docker-build() {
 
   docker-exec "cd /src && ./node_modules/.bin/mocha"
 
+  node_version=$(docker-exec "NBIN_BYPASS=true /src/lib/node/node --version | sed 's/^v//'")
+
   docker kill "$containerId"
 }
 
 function local-build() {
   yarn build:node
   yarn test
+  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
 }
 
 function main() {
@@ -59,6 +62,7 @@ function main() {
   yarn build:nbin
   yarn build:bundle
 
+  local node_version="unknown"
   local platform="${PLATFORM:-linux}"
   local arch="${ARCH:-x86_64}"
   echo "Building $platform-$arch"
@@ -68,18 +72,12 @@ function main() {
     *                ) local-build ;;
   esac
 
-  pwd && ls -l ./lib/node
-
-  local node_version
-  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
   local binary_name="node-$node_version-$platform-$arch"
 
   mkdir -p "./build/$version"
   cp ./lib/node/node "./build/$version/$binary_name"
 
   echo "Copied binary to ./build/$version/$binary_name"
-
-  pwd && tree ./build || ls -l ./build
 }
 
 main "$@"
