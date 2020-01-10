@@ -6,22 +6,27 @@ platform:
   arch: amd64
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:amd64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache python-pip
+    - apt update && apt install -y build-essential ccache
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:amd64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12
+  image: codercom/nbin
   commands:
     - yarn test
 
@@ -44,22 +49,27 @@ platform:
   arch: amd64
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:amd64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12-alpine
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
+    - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:amd64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12-alpine
+  image: codercom/nbin:alpine
   commands:
     - yarn test
 
@@ -82,22 +92,27 @@ platform:
   arch: arm64
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:arm64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache python-pip
+    - apt update && apt install -y build-essential ccache
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:arm64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12
+  image: codercom/nbin
   commands:
     - yarn test
 
@@ -120,22 +135,27 @@ platform:
   arch: arm64
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:arm64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12-alpine
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
+    - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:arm64
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12-alpine
+  image: codercom/nbin:alpine
   commands:
     - yarn test
 
@@ -158,22 +178,27 @@ platform:
   arch: arm
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:arm
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apt update && apt install -y build-essential ccache python-pip
+    - apt update && apt install -y build-essential ccache
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:arm
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12
+  image: codercom/nbin
   commands:
     - yarn test
 
@@ -196,22 +221,27 @@ platform:
   arch: arm
 
 steps:
+- name: cache:restore
+  image: codercom/gcs-cacher:arm
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
+
 - name: build
   image: node:12-alpine
-  environment:
-    CLOUDSDK_CORE_PROJECT: coder-production
-    KEY_FILE_CONTENTS:
-      from_secret: gcs-json-key-file-base64
   commands:
-    - apk add bash gcc g++ ccache git make python linux-headers py-pip python-dev openssl-dev libffi-dev
+    - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - pip install gsutil
-    - ./scripts/cache.bash restore .cache ${DRONE_BRANCH}
     - ./scripts/ci.bash
-    - ./scripts/cache.bash rebuild .cache ${DRONE_BRANCH}
+
+- name: cache:rebuild
+  image: codercom/gcs-cacher:arm
+  settings:
+    json_key_base64:
+      from_secret: gcs-json-key-file-base64
 
 - name: test
-  image: node:12-alpine
+  image: codercom/nbin:alpine
   commands:
     - yarn test
 
