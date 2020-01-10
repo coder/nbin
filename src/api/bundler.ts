@@ -151,7 +151,7 @@ export class Binary implements nbin.Binary {
 
     const resp = await fetch(url)
     if (resp.status !== 200) {
-      throw new Error(resp.statusText)
+      throw new Error(`Unable to download ${url}; does the resource exist? Error: ${resp.statusText}`)
     }
     const buffer = await resp.arrayBuffer()
 
