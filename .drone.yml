@@ -7,11 +7,9 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:amd64
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12
@@ -20,15 +18,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:amd64
-  pull: always
+- name: cache:package
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin
+  image: node:12
   commands:
     - yarn test
 
@@ -52,11 +60,10 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:amd64
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12-alpine
+  commands:
+    - apk add bash
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12-alpine
@@ -65,15 +72,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:amd64
-  pull: always
+- name: cache:package
+  image: node:12-alpine
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin:alpine
+  image: node:12-alpine
   commands:
     - yarn test
 
@@ -97,11 +114,9 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:arm64
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12
@@ -110,15 +125,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:arm64
-  pull: always
+- name: cache:package
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin
+  image: node:12
   commands:
     - yarn test
 
@@ -142,11 +167,10 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:arm64
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12-alpine
+  commands:
+    - apk add bash
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12-alpine
@@ -155,15 +179,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:arm64
-  pull: always
+- name: cache:package
+  image: node:12-alpine
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin:alpine
+  image: node:12-alpine
   commands:
     - yarn test
 
@@ -187,11 +221,9 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:arm
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12
@@ -200,15 +232,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:arm
-  pull: always
+- name: cache:package
+  image: node:12
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin
+  image: node:12
   commands:
     - yarn test
 
@@ -232,11 +274,10 @@ platform:
 
 steps:
 - name: cache:restore
-  image: codercom/gcs-cacher:arm
-  pull: always
-  settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+  image: node:12-alpine
+  commands:
+    - apk add bash
+    - ./scripts/cacher.bash
 
 - name: build
   image: node:12-alpine
@@ -245,15 +286,25 @@ steps:
     - yarn
     - ./scripts/ci.bash
 
-- name: cache:rebuild
-  image: codercom/gcs-cacher:arm
-  pull: always
+- name: cache:package
+  image: node:12-alpine
+  commands:
+    - ./scripts/cacher.bash
+  when:
+    event: push
+
+- name: cache:push
+  image: plugins/gcs
   settings:
-    json_key_base64:
-      from_secret: gcs-json-key-file-base64
+     source: gcs-cache-upload/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: push
 
 - name: test
-  image: codercom/nbin:alpine
+  image: node:12-alpine
   commands:
     - yarn test
 

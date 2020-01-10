@@ -31,9 +31,6 @@ function main() {
     arch=$(uname -m)
   fi
 
-  echo "Running from $(pwd)"
-  ls -lA
-
   echo "Building $platform-$arch"
   XDG_CACHE_HOME="$(pwd)/.cache" yarn build
 
