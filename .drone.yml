@@ -9,7 +9,7 @@ steps:
 - name: cache:restore
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12
@@ -21,14 +21,14 @@ steps:
 - name: cache:package
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
@@ -62,8 +62,7 @@ steps:
 - name: cache:restore
   image: node:12-alpine
   commands:
-    - apk add bash
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12-alpine
@@ -75,14 +74,14 @@ steps:
 - name: cache:package
   image: node:12-alpine
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
@@ -116,7 +115,7 @@ steps:
 - name: cache:restore
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12
@@ -128,14 +127,14 @@ steps:
 - name: cache:package
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
@@ -169,8 +168,7 @@ steps:
 - name: cache:restore
   image: node:12-alpine
   commands:
-    - apk add bash
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12-alpine
@@ -182,14 +180,14 @@ steps:
 - name: cache:package
   image: node:12-alpine
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
@@ -223,7 +221,7 @@ steps:
 - name: cache:restore
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12
@@ -235,14 +233,14 @@ steps:
 - name: cache:package
   image: node:12
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
@@ -276,8 +274,7 @@ steps:
 - name: cache:restore
   image: node:12-alpine
   commands:
-    - apk add bash
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
 
 - name: build
   image: node:12-alpine
@@ -289,14 +286,14 @@ steps:
 - name: cache:package
   image: node:12-alpine
   commands:
-    - ./scripts/cacher.bash
+    - ./scripts/cacher.sh
   when:
     event: push
 
 - name: cache:push
   image: plugins/gcs
   settings:
-     source: gcs-cache-upload/
+     source: cache-upload/
      target: nbin.cdr.sh
      token:
        from_secret: gcs-token
