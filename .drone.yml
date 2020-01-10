@@ -8,6 +8,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:amd64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -21,6 +22,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:amd64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -51,6 +53,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:amd64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -64,6 +67,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:amd64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -94,6 +98,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:arm64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -107,6 +112,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:arm64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -137,6 +143,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:arm64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -150,6 +157,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:arm64
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -180,6 +188,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:arm
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -193,6 +202,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:arm
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -223,6 +233,7 @@ platform:
 steps:
 - name: cache:restore
   image: codercom/gcs-cacher:arm
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
@@ -236,6 +247,7 @@ steps:
 
 - name: cache:rebuild
   image: codercom/gcs-cacher:arm
+  pull: always
   settings:
     json_key_base64:
       from_secret: gcs-json-key-file-base64
