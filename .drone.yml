@@ -16,7 +16,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12
@@ -69,7 +69,7 @@ steps:
   commands:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12-alpine
@@ -122,7 +122,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12
@@ -175,7 +175,7 @@ steps:
   commands:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12-alpine
@@ -228,7 +228,7 @@ steps:
   commands:
     - apt update && apt install -y build-essential ccache
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12
@@ -281,7 +281,7 @@ steps:
   commands:
     - apk add bash gcc g++ ccache git make python linux-headers
     - yarn
-    - ./scripts/ci.bash
+    - timeout 50m ./scripts/ci.bash || echo 'Timed out or failed; continuing so we can preserve cache for the next run'
 
 - name: cache:package
   image: node:12-alpine
