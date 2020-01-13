@@ -42,14 +42,10 @@ const output = bin.bundle();
 
 ### Forks
 
-<<<<<<< HEAD
-`child_process.fork()` works as expected. `nbin` will treat the compiled binary as the original node binary when the `process.send()` function is available.
-=======
 To use the compiled binary as the original Node binary set the `NBIN_BYPASS`
 environment variable. This can be especially useful when forking processes (or
 spawning with the binary). You might want to simply immediately set this to any
 truthy value as soon as your code loads.
->>>>>>> afff57d3ac36c0284b14b9d4cba89f2e0e38d334
 
 ### Webpack
 
@@ -77,9 +73,6 @@ You can pass
 NODE_OPTIONS="--inspect-brk" ./path/to/bin
 ```
 
-<<<<<<< HEAD
-We also support compressed JavaScript to reduce your bundle's size, preferrably gzip.
-=======
 Gzip'd JavaScript files are supported to reduce bundle size.
 
 ## Development
@@ -100,4 +93,3 @@ We patch Node to make it capable of reading files within the binary.
 To generate a new patch, **stage all the changes** you want to be included in
 the patch in the Node source, then run `yarn patch:generate` in this
 directory.
->>>>>>> afff57d3ac36c0284b14b9d4cba89f2e0e38d334
