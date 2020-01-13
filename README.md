@@ -89,6 +89,10 @@ yarn
 yarn build
 ```
 
+When publishing use `npm` and not `yarn` as `yarn` will traverse ignored
+directories anyway and re-add anything excluded by any discovered `.gitignore`
+files.
+
 ### Patching
 
 We patch Node to make it capable of reading files within the binary.

@@ -3,6 +3,7 @@
 
 set -Eeuo pipefail
 
+
 function main() {
   cd "$(dirname "$0")/../lib/node"
 
@@ -32,7 +33,6 @@ function main() {
   echo "cores: $cores"
 
   ./configure \
-    --dest-cpu=x64 \
     --link-module ./lib/nbin.js \
     --link-module ./lib/_third_party_main.js \
     --openssl-no-asm --openssl-use-def-ca-store

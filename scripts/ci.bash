@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ci.bash -- Build from CI.
+# travis.bash -- Build from CI.
 
 set -Eeuo pipefail
 
@@ -42,41 +42,42 @@ function docker-build() {
 
   docker-exec "cd /src && ./node_modules/.bin/mocha"
 
+  node_version=$(docker-exec "NBIN_BYPASS=true /src/lib/node/node --version | sed 's/^v//'")
+
   docker kill "$containerId"
 }
 
-function mac-build() {
+function local-build() {
   yarn build:node
   yarn test
+  node_version=$(NBIN_BYPASS=true ./lib/node/node --version | sed 's/^v//')
 }
 
 function main() {
   cd "$(dirname "$0")/.."
 
-  local node_version=12.14.0
   local version
   version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
   yarn build:nbin
   yarn build:bundle
 
-  local binary_name="node-$node_version-${TARGET:-darwin}"
-  if [[ $OSTYPE == "darwin"* ]]; then
-    binary_name="$binary_name-x86_64"
-    mac-build
-  else
-    local image="codercom/nbin-$TARGET"
-    case $TARGET in
-      "alpine") binary_name="$binary_name-x86_64" ;;
-      "centos")
-        binary_name="$binary_name-x86_64"
-        ;;
-    esac
-    docker-build "$image"
-  fi
+  local node_version="unknown"
+  local platform="${PLATFORM:-linux}"
+  local arch="${ARCH:-x86_64}"
+  echo "Building $platform-$arch"
+
+  case $platform in
+    "alpine"|"centos") docker-build "codercom/nbin-$platform" ;;
+    *                ) local-build ;;
+  esac
+
+  local binary_name="node-$node_version-$platform-$arch"
 
   mkdir -p "./build/$version"
   cp ./lib/node/node "./build/$version/$binary_name"
+
+  echo "Copied binary to ./build/$version/$binary_name"
 }
 
 main "$@"

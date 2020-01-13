@@ -17,25 +17,13 @@ before_install:
   - eval "$(MATRIX_EVAL)"
 matrix:
   include:
-  # - os: linux
-  #   env:
-  #     - TARGET="aarch64-alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="aarch64"
   - os: linux
     env:
-      - TARGET="alpine"
-  # - os: linux
-    # env:
-    #   - TARGET="armv7hf-alpine"
-  # - os: linux
-  #   env:
-  #     - TARGET="armv7hf"
+      - PLATFORM="alpine"
   - os: linux
-    env:
-      - TARGET="centos"
   - os: osx
+    env:
+      - PLATFORM="darwin"
 script: scripts/ci.bash
 deploy:
   provider: gcs
@@ -46,5 +34,5 @@ deploy:
   skip_cleanup: true
   local-dir: build
   on:
-    branch: master
+    tags: true
     repo: cdr/nbin

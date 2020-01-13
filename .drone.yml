@@ -1,0 +1,136 @@
+kind: pipeline
+type: docker
+name: build-amd64
+
+platform:
+  arch: amd64
+
+steps:
+- name: restore-cache
+  image: codercom/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - ARCH=amd64 ./scripts/ci.bash
+
+- name: rebuild-cache
+  image: codercom/drone-volume-cache:amd64
+  volumes:
+  - name: ccache-amd64
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
+
+---
+kind: pipeline
+type: docker
+name: build-arm64
+
+platform:
+  arch: arm64
+
+steps:
+- name: restore-cache
+  image: codercom/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - ARCH=arm64 ./scripts/ci.bash
+
+- name: rebuild-cache
+  image: codercom/drone-volume-cache:arm64
+  volumes:
+  - name: ccache-arm64
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag
+
+---
+kind: pipeline
+type: docker
+name: build-arm
+
+platform:
+  arch: arm
+
+steps:
+- name: restore-cache
+  image: codercom/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache/ccache
+
+- name: build
+  image: node:12
+  commands:
+    - apt update && apt install -y build-essential ccache
+    - yarn
+    - ARCH=arm ./scripts/ci.bash
+
+- name: rebuild-cache
+  image: codercom/drone-volume-cache:arm
+  volumes:
+  - name: ccache-arm
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - /root/.cache/ccache
+
+- name: upload
+  image: plugins/gcs
+  settings:
+     source: build/
+     target: nbin.cdr.sh
+     token:
+       from_secret: gcs-token
+  when:
+    event: tag

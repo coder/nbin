@@ -5,6 +5,7 @@
 .gitmodules
 .prettierrc.yaml
 .travis.yml
+.drone.yml
 .vscode
 build
 example

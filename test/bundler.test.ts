@@ -168,7 +168,7 @@ describe("bundler", () => {
     })
   }
 
-  it("should fill fs and propogate errors", async () => {
+  it("should fill fs and propagate errors", async () => {
     const mainFile = "/example.js"
     const exampleContent = (stdout: string): void => {
       const fs = require("fs") as typeof import("fs")
@@ -196,5 +196,14 @@ describe("bundler", () => {
     const stdout = "success"
     bin.writeFile(mainFile, zlib.gzipSync(Buffer.from(`process.stdout.write("${stdout}");process.exit(0);`)))
     await runBinary(bin, { stdout })
+  })
+
+  it("should pass options", async () => {
+    const mainFile = "/example.js"
+    const bin = new Binary({ nodePath, mainFile })
+    const stdout = `["/example.js","--version"]`
+    bin.writeFile(mainFile, `process.stdout.write(JSON.stringify(process.argv.slice(1)));process.exit(0);`)
+    await runBinary(bin, { stdout: "v12.14.0\n" }, { NBIN_BYPASS: "true" }, ["--version"])
+    await runBinary(bin, { stdout }, undefined, ["--version"])
   })
 })
