@@ -29,10 +29,8 @@ package() {
 main() {
   cd "$(dirname "$0")/.."
 
-  # Get the branch for this build. We can ignore the master branch since we'll
-  # fall back to it below anyway.
+  # Get the branch for this build.
   branch=${DRONE_BRANCH:-${DRONE_SOURCE_BRANCH:-${DRONE_TAG:-}}}
-  [ "$branch" = "$DRONE_REPO_BRANCH" ] && branch=""
 
   # The cache will be named based on the arch, platform, and libc.
   arch=$DRONE_STAGE_ARCH
