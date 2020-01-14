@@ -13,8 +13,10 @@ function copy-binary() {
 function main() {
   cd "$(dirname "$0")/.."
 
-  local nbin_version
-  nbin_version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+  local nbin_version=${TRAVIS_TAG:-${DRONE_TAG:-}}
+  if [[ -z $nbin_version ]] ; then
+    nbin_version=$(grep version ./package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+  fi
 
   local arch="amd64"
   local platform="linux"
