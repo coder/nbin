@@ -35,10 +35,10 @@ main() {
   # The cache will be named based on the arch, platform, and libc.
   arch=$DRONE_STAGE_ARCH
   platform=${PLATFORM:-linux}
-   case $DRONE_STAGE_NAME in
-     *alpine*) libc=musl  ;;
-     *       ) libc=glibc ;;
-   esac
+  case $DRONE_STAGE_NAME in
+    *alpine*) libc=musl  ;;
+    *       ) libc=glibc ;;
+  esac
 
   tar="$platform-$arch-$libc"
 
